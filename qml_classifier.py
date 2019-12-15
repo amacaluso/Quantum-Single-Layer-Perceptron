@@ -1,87 +1,72 @@
-import qiskit
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
-from qiskit import execute, IBMQ, Aer
-from qiskit import BasicAer, execute
-from qiskit.tools.visualization import plot_state_city
-from qiskit.providers.aer import StatevectorSimulator
-from qiskit.tools.visualization import circuit_drawer
+from Utils_qml import *
+
+
+x1 = [0.6, 0.5, 0.2, 0.9]; y1 = 1; x = np.array(x1)
+
+# x2 = [3,1]; y2 = 1
+# x3 = [1,2]; y3 = -1
+# x4 = [1,3]; y4 = -1
+#
+# X = [x1, x2, x3, x4]; X = [x3, x4, x1, x2]
+# Y = [y1, y2, y3, y4]; Y = [y3, y4, y1, y2]
+# len(X)
+#
+# plt.scatter([x[0] for x in X], [x[1] for x in X])
+# plt.scatter([x[0] for x in [x1, x2]], [x[1] for x in [x3, x4]])
+# plt.show()
+
 import numpy as np
-from qiskit.circuit import Parameter
-import pennylane as qml
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
-import numpy as np
-import matplotlib.pyplot as plt
+from sklearn import preprocessing
+
+x = x.reshape(1, -1)
+X_normalized = preprocessing.normalize(x, norm='l2')
+np.linalg.norm(x)
+
+x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
+np.linalg.norm(x)
+ang = get_angles(x)
+
+dev = qml.device('default.qubit', wires=5)
+
+@qml.qnode(dev)
+def test(angles=None):
+
+    state_preparation(angles)
+
+    return qml.expval(qml.PauliZ(1))
 
 
-### Initialization ###
+test(angles=ang)
 
-import pennylane as qml
-from pennylane import numpy as np
-from pennylane.templates import AmplitudeEmbedding
-
-dev = qml.device('default.qubit', wires=3)
+print("x               : ", x)
+print("angles          : ", ang)
+print("amplitude vector: ", np.real(dev._state))
 
 
-x1 = [0,1]; y1 = 1;
-x2 = [0,0]; y2 = 0
-x3 = [1,0]; y3 = 1
-x4 = [1,1]; y4 = 0; x = x1
+def layer(W1):
+    qml.Rot(W1[0, 0], W1[0, 1], W1[0, 2], wires=1)
+    qml.Rot(W1[1, 0], W1[1, 1], W1[1, 2], wires=2)
+    qml.CNOT(wires=[0, 1])
 
-X = [x1, x2, x3, x4]
-Y = [y1, y2, y3, y4]
-len(X)
-
-plt.scatter([x[0] for x in X], [x[1] for x in X])
-plt.scatter([x[0] for x in [x2, x4]], [x[1] for x in [x1, x3]])
-plt.show()
-
-def state_preparation(x):
-    qml.Hadamard(0)
-    state_preparation(x)
-    qml.Hadamard(2)
-
-    return AmplitudeEmbedding(x, 1, normalize=True)
-
-state_preparation(x)
+def layer(W2):
+    qml.Rot(W2[0, 0], W2[0, 1], W2[0, 2], wires=3)
+    qml.Rot(W2[1, 0], W2[1, 1], W2[1, 2], wires=4)
+    qml.CNOT(wires=[3, 4])
 
 
 @qml.qnode(dev)
-def circuit(var, x = None):
-    qml.CSWAP(wires=[0,1,2])
-    # qml.CSWAP(wires=[0, 2, 4])
-    qml.RY(var[0], wires=1)
-    qml.RY(var[1], wires=2)
-    qml.CSWAP(wires=[0,1,2])
-    qml.RY(var[2], wires=1)
-    return qml.expval(qml.PauliZ(1))
+def circuit(weights, angles=None):
+    state_preparation(angles)
 
+    qml.CSWAP()
+
+    layer(W)
+
+    return qml.expval(qml.PauliZ(0))
 
 def variational_classifier(param, x=None):
     var = param
     return circuit(var, x=x)
-
-variational_classifier(var, x=x)
-
-
-def square_loss(labels, predictions):
-    loss = 0
-    for l, p in zip(labels, predictions):
-        loss = loss + (l - p) ** 2
-
-    loss = loss / len(labels)
-    return loss
-
-def accuracy(labels, predictions):
-
-    loss = 0
-    for l, p in zip(labels, predictions):
-        if abs(l - p) < 1e-5:
-            loss = loss + 1
-    loss = loss / len(labels)
-
-    return loss
-
 
 
 def cost(var, X, Y):
@@ -94,64 +79,74 @@ opt = qml.GradientDescentOptimizer(stepsize=0.1)
 for x in X:
     print( x)
 
-np.random.seed(2019)
+np.random.seed(100)
 theta1 = np.array( 2*np.pi*np.random.random_sample() )
 theta2 = np.array( 2*np.pi*np.random.random_sample() )
 theta3 = np.array( 2*np.pi*np.random.random_sample() )
-init_params = np.array([theta1, theta2, theta3])
+theta4 = np.array( 2*np.pi*np.random.random_sample() )
+
+init_params = np.array([theta1, theta2, theta3, theta4])
 
 
-
-
-
+variational_classifier(init_params, x=x)
 var = init_params
-var = opt.step(lambda v: cost(v, X, Y), var)
+
+
+for it in range(100):
+
+    # Update the weights by one optimizer step
+    var = opt.step(lambda v: cost(v, X, Y), var)
 
     # Compute accuracy
     predictions = [np.sign(variational_classifier(var, x=x)) for x in X]
     acc = accuracy(Y, predictions)
 
     print("Iter: {:5d} | Cost: {:0.7f} | Accuracy: {:0.7f} ".format(it + 1, cost(var, X, Y), acc))
+    # Compute accuracy
+    predictions = [np.sign(variational_classifier(var, x=x)) for x in X]
+    acc = accuracy(Y, predictions)
+
+    #print("Iter: {:5d} | Cost: {:0.7f} | Accuracy: {:0.7f} ".format(it + 1, cost(var, X, Y), acc))
 
 
 
 
 
-print('The expectation value {}'.format(circuit(var = [0, 0, 0])))
-print('The expectation value {}'.format(circuit(var = [np.pi/6, np.pi/2, np.pi/4])))
-print('The expectation value {}'.format(circuit(var = [np.pi, np.pi/3, np.pi/2])))
-
-def objective(var ):
-    if circuit(var) >0.5:
-
-
-    return circuit(var)
-
-np.random.seed(2019)
-theta1 = np.array( 2*np.pi*np.random.random_sample() )
-theta2 = np.array( 2*np.pi*np.random.random_sample() )
-theta3 = np.array( 2*np.pi*np.random.random_sample() )
-init_params = np.array([theta1, theta2, theta3])
-print('Initial objective function value {:.7f} for theta={}'.format(circuit(var = init_params),
-                                                                        init_params))
-
-print( circuit(init_params), init_params )
-# Initilize Gradient Descent Optimizer
-opt = qml.GradientDescentOptimizer(stepsize=0.1)
-
-# set the number of steps
-steps = 10
-
-params = init_params
-
-for i in range(steps):
-    # update the circuit parameters
-    params = opt.step(circuit, params)
-    print('Cost after step {:5d}: {: .7f}'.format(i+1, objective(params)))
-    print(params)
-
-print('Optimized rotation angle: {}'.format(params))
-
+# print('The expectation value {}'.format(circuit(var = [0, 0, 0])))
+# print('The expectation value {}'.format(circuit(var = [np.pi/6, np.pi/2, np.pi/4])))
+# print('The expectation value {}'.format(circuit(var = [np.pi, np.pi/3, np.pi/2])))
+#
+# def objective(var ):
+#     if circuit(var) >0.5:
+#
+#
+#     return circuit(var)
+#
+# np.random.seed(2019)
+# theta1 = np.array( 2*np.pi*np.random.random_sample() )
+# theta2 = np.array( 2*np.pi*np.random.random_sample() )
+# theta3 = np.array( 2*np.pi*np.random.random_sample() )
+# init_params = np.array([theta1, theta2, theta3])
+# print('Initial objective function value {:.7f} for theta={}'.format(circuit(var = init_params),
+#                                                                         init_params))
+#
+# print( circuit(init_params), init_params )
+# # Initilize Gradient Descent Optimizer
+# opt = qml.GradientDescentOptimizer(stepsize=0.1)
+#
+# # set the number of steps
+# steps = 10
+#
+# params = init_params
+#
+# for i in range(steps):
+#     # update the circuit parameters
+#     params = opt.step(circuit, params)
+#     print('Cost after step {:5d}: {: .7f}'.format(i+1, objective(params)))
+#     print(params)
+#
+# print('Optimized rotation angle: {}'.format(params))
+#
 
 # import pennylane as qml
 # from pennylane import numpy as np
