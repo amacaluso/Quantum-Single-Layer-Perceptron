@@ -1,191 +1,3 @@
-import pennylane as qml
-from pennylane import numpy as np
-from pennylane.optimize import NesterovMomentumOptimizer
-
-##############################################################################
-# Quantum and classical nodes
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# We create a quantum device with four “wires” (or qubits).
-
-dev = qml.device("default.qubit", wires=4)
-
-##############################################################################
-# Variational classifiers usually define a “layer” or “block”, which is an
-# elementary circuit architecture that gets repeated to build the
-# variational circuit.
-#
-# Our circuit layer consists of an arbitrary rotation on every qubit, as
-# well as CNOTs that entangle each qubit with its neighbour.
-
-
-def layer(W):
-
-    qml.Rot(W[0, 0], W[0, 1], W[0, 2], wires=0)
-    qml.Rot(W[1, 0], W[1, 1], W[1, 2], wires=1)
-    qml.Rot(W[2, 0], W[2, 1], W[2, 2], wires=2)
-    qml.Rot(W[3, 0], W[3, 1], W[3, 2], wires=3)
-
-    qml.CNOT(wires=[0, 1])
-    qml.CNOT(wires=[1, 2])
-    qml.CNOT(wires=[2, 3])
-    qml.CNOT(wires=[3, 0])
-
-
-##############################################################################
-# We also need a way to encode data inputs :math:`x` into the circuit, so
-# that the measured output depends on the inputs. In this first example,
-# the inputs are bitstrings, which we encode into the state of the qubits.
-# The quantum state :math:`\psi` after
-# state preparation is a computational basis state that has 1s where
-# :math:`x` has 1s, for example
-#
-# .. math::  x = 0101 \rightarrow |\psi \rangle = |0101 \rangle .
-#
-# We use the :class:`~pennylane.BasisState` function provided by PennyLane, which expects
-# ``x`` to be a list of zeros and ones, i.e. ``[0,1,0,1]``.
-
-
-def statepreparation(x):
-    qml.BasisState(x, wires=[0, 1, 2, 3])
-
-
-##############################################################################
-# Now we define the quantum node as a state preparation routine, followed
-# by a repetition of the layer structure. Borrowing from machine learning,
-# we call the parameters ``weights``.
-
-
-@qml.qnode(dev)
-def circuit(weights, x=None):
-
-    statepreparation(x)
-
-    for W in weights:
-        layer(W)
-
-    return qml.expval(qml.PauliZ(0))
-
-
-##############################################################################
-# Different from previous examples, the quantum node takes the data as a
-# keyword argument ``x`` (with the default value ``None``). Keyword
-# arguments of a quantum node are considered as fixed when calculating a
-# gradient; they are never trained.
-#
-# If we want to add a “classical” bias parameter, the variational quantum
-# classifer also needs some post-processing. We define the final model by
-# a classical node that uses the first variable, and feeds the remainder
-# into the quantum node. Before this, we reshape the list of remaining
-# variables for easy use in the quantum node.
-
-
-def variational_classifier(var, x=None):
-    weights = var[0]
-    bias = var[1]
-    return circuit(weights, x=x) + bias
-
-
-##############################################################################
-# Cost
-# ~~~~
-#
-# In supervised learning, the cost function is usually the sum of a loss
-# function and a regularizer. We use the standard square loss that
-# measures the distance between target labels and model predictions.
-
-
-def square_loss(labels, predictions):
-    loss = 0
-    for l, p in zip(labels, predictions):
-        loss = loss + (l - p) ** 2
-
-    loss = loss / len(labels)
-    return loss
-
-
-##############################################################################
-# To monitor how many inputs the current classifier predicted correctly,
-# we also define the accuracy given target labels and model predictions.
-
-
-def accuracy(labels, predictions):
-
-    loss = 0
-    for l, p in zip(labels, predictions):
-        if abs(l - p) < 1e-5:
-            loss = loss + 1
-    loss = loss / len(labels)
-
-    return loss
-
-
-##############################################################################
-# For learning tasks, the cost depends on the data - here the features and
-# labels considered in the iteration of the optimization routine.
-
-
-def cost(var, X, Y):
-    predictions = [variational_classifier(var, x=x) for x in X]
-    return square_loss(Y, predictions)
-
-
-##############################################################################
-# Optimization
-# ~~~~~~~~~~~~
-#
-# Let’s now load and preprocess some data.
-
-data = np.loadtxt("parity.txt")
-X = data[:, :-1]
-Y = data[:, -1]
-Y = Y * 2 - np.ones(len(Y))  # shift label from {0, 1} to {-1, 1}
-
-for i in range(5):
-    print("X = {}, Y = {: d}".format(X[i], int(Y[i])))
-
-print("...")
-
-##############################################################################
-# We initialize the variables randomly (but fix a seed for
-# reproducability). The first variable in the list is used as a bias,
-# while the rest is fed into the gates of the variational circuit.
-
-np.random.seed(0)
-num_qubits = 4
-num_layers = 2
-var_init = (0.01 * np.random.randn(num_layers, num_qubits, 3), 0.0)
-
-print(var_init)
-
-##############################################################################
-# Next we create an optimizer and choose a batch size…
-
-opt = NesterovMomentumOptimizer(0.5)
-batch_size = 5
-
-##############################################################################
-# …and train the optimizer. We track the accuracy - the share of correctly
-# classified data samples. For this we compute the outputs of the
-# variational classifier and turn them into predictions in
-# :math:`\{-1,1\}` by taking the sign of the output.
-
-var = var_init
-for it in range(25):
-
-    # Update the weights by one optimizer step
-    batch_index = np.random.randint(0, len(X), (batch_size,))
-    X_batch = X[batch_index]
-    Y_batch = Y[batch_index]
-    var = opt.step(lambda v: cost(v, X_batch, Y_batch), var)
-
-    # Compute accuracy
-    predictions = [np.sign(variational_classifier(var, x=x)) for x in X]
-    acc = accuracy(Y, predictions)
-
-    print("Iter: {:5d} | Cost: {:0.7f} | Accuracy: {:0.7f} ".format(it + 1, cost(var, X, Y), acc))
-
-
 ##############################################################################
 # 2. Iris classification
 # ----------------------
@@ -195,7 +7,9 @@ for it in range(25):
 #
 # To encode real-valued vectors into the amplitudes of a quantum state, we
 # use a 2-qubit simulator.
-
+import pennylane as qml
+from pennylane import numpy as np
+from pennylane.optimize import NesterovMomentumOptimizer
 dev = qml.device("default.qubit", wires=2)
 
 ##############################################################################
@@ -206,9 +20,9 @@ dev = qml.device("default.qubit", wires=2)
 # subspace, so that we can ignore signs (which would require another
 # cascade of rotations around the z axis).
 #
-# The circuit is coded according to the scheme in `Möttönen, et al.
-# (2004) <https://arxiv.org/abs/quant-ph/0407010>`__, or—as presented
-# for positive vectors only—in `Schuld and Petruccione
+# The circuit is coded according to the scheme in `MÃ¶ttÃ¶nen, et al.
+# (2004) <https://arxiv.org/abs/quant-ph/0407010>`__, orâ€”as presented
+# for positive vectors onlyâ€”in `Schuld and Petruccione
 # (2018) <https://link.springer.com/book/10.1007/978-3-319-96424-9>`__. We
 # had to also decompose controlled Y-axis rotations into more basic
 # circuits following `Nielsen and Chuang
@@ -243,7 +57,7 @@ def statepreparation(a):
 
 
 ##############################################################################
-# Let’s test if this routine actually works.
+# Letâ€™s test if this routine actually works.
 
 x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
 ang = get_angles(x)
@@ -338,7 +152,7 @@ Y = data[:, -1]
 
 ##############################################################################
 # These angles are our new features, which is why we have renamed X to
-# “features” above. Let’s plot the stages of preprocessing and play around
+# â€œfeaturesâ€ above. Letâ€™s plot the stages of preprocessing and play around
 # with the dimensions (dim1, dim2). Some of them still separate the
 # classes well, while others are less informative.
 #
