@@ -103,7 +103,8 @@ def layer(W, wires = None):
 @qml.qnode(dev)
 def circuit(weights, angles=None):
     statepreparation(angles)
-    qml.Hadamard(wires=0)
+    # qml.Hadamard(wires=0)
+    qml.RY(weights[2], wires=0)
     qml.CSWAP(wires=[0, 1, 3])
     qml.CSWAP(wires = [0, 2, 4])
 
@@ -115,7 +116,7 @@ def circuit(weights, angles=None):
 
     qml.CSWAP(wires = [0, 1, 3])
     qml.CSWAP(wires = [0, 2, 4])
-    qml.RY(weights[2], wires=1 )
+    # qml.RY(weights[2], wires=1)
 
     return qml.expval(qml.PauliZ(1))
 
@@ -234,7 +235,7 @@ batch_size = 5
 
 # train the variational classifier
 var = var_init
-for it in range(60):
+for it in range(100):
 
     # Update the weights by one optimizer step
     batch_index = np.random.randint(0, num_train, (batch_size,))
