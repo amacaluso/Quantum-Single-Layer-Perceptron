@@ -3,6 +3,13 @@ from pennylane import numpy as np
 from pennylane.optimize import NesterovMomentumOptimizer
 
 ##############################################################################
+# Quantum and classical nodes
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# We create a quantum device with four “wires” (or qubits).
+
+
+##############################################################################
 # 2. Iris classification
 # ----------------------
 #
@@ -12,7 +19,7 @@ from pennylane.optimize import NesterovMomentumOptimizer
 # To encode real-valued vectors into the amplitudes of a quantum state, we
 # use a 2-qubit simulator.
 
-dev = qml.device("default.qubit", wires=5)
+dev = qml.device("default.qubit", wires=2)
 
 ##############################################################################
 # State preparation is not as simple as when we represent a bitstring with
@@ -44,6 +51,7 @@ def get_angles(x):
 
 def statepreparation(a):
     qml.RY(a[0], wires=0)
+
     qml.CNOT(wires=[0, 1])
     qml.RY(a[1], wires=1)
     qml.CNOT(wires=[0, 1])
@@ -64,19 +72,19 @@ x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
 ang = get_angles(x)
 
 
-# @qml.qnode(dev)
-# def test(angles=None):
-#
-#     statepreparation(angles)
-#
-#     return qml.expval(qml.PauliZ(0))
-#
-#
-# test(angles=ang)
-#
-# print("x               : ", x)
-# print("angles          : ", ang)
-# print("amplitude vector: ", np.real(dev._state))
+@qml.qnode(dev)
+def test(angles=None):
+
+    statepreparation(angles)
+
+    return qml.expval(qml.PauliZ(0))
+
+
+test(angles=ang)
+
+print("x               : ", x)
+print("angles          : ", ang)
+print("amplitude vector: ", np.real(dev._state))
 
 
 ##############################################################################
@@ -90,16 +98,9 @@ ang = get_angles(x)
 
 
 def layer(W):
-    qml.CSWAP(wires=[0,2,4])
-    qml.CSWAP(wires=[0,1,3])
-    # qml.CSWAP(wires=[0, 2, 4])
-    qml.RY(var[0], wires=1)
-    qml.RY(var[1], wires=2)
-    qml.RY(var[2], wires=3)
-    qml.RY(var[3], wires=4)
-    qml.CSWAP(wires=[0,2,4])
-    qml.CSWAP(wires=[0,1,3])
-#   qml.RY(var[2], wires=1)
+    qml.Rot(W[0, 0], W[0, 1], W[0, 2], wires=0)
+    qml.Rot(W[1, 0], W[1, 1], W[1, 2], wires=1)
+    qml.CNOT(wires=[0, 1])
 
 
 ##############################################################################
@@ -112,16 +113,16 @@ def layer(W):
 def circuit(weights, angles=None):
     statepreparation(angles)
 
-    layer(weights)
+    for W in weights:
+        layer(W)
 
-    return qml.expval(qml.PauliZ(1))
+    return qml.expval(qml.PauliZ(0))
 
 
 def variational_classifier(var, angles=None):
     weights = var[0]
-    return circuit(weights, angles=angles)
-
-
+    bias = var[1]
+    return circuit(weights, angles=angles) + bias
 
 def square_loss(labels, predictions):
     loss = 0
@@ -131,6 +132,15 @@ def square_loss(labels, predictions):
     loss = loss / len(labels)
     return loss
 
+def accuracy(labels, predictions):
+
+    loss = 0
+    for l, p in zip(labels, predictions):
+        if abs(l - p) < 1e-5:
+            loss = loss + 1
+    loss = loss / len(labels)
+
+    return loss
 
 def cost(weights, features, labels):
     predictions = [variational_classifier(weights, angles=f) for f in features]
@@ -146,7 +156,7 @@ def cost(weights, features, labels):
 # the last preprocessing step, we translate the inputs x to rotation
 # angles using the ``get_angles`` function we defined above.
 
-data = np.loadtxt("iris_classes1and2_scaled.txt")
+data = np.loadtxt("data/iris_classes1and2_scaled.txt")
 X = data[:, 0:2]
 print("First X sample (original)  :", X[0])
 

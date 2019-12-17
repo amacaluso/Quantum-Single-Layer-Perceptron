@@ -1,115 +1,33 @@
 from Utils_qml import *
+# Imported functions: get_angles, statepreparation, square_loss, accuracy, layer
 
-##############################################################################
-# 2. Iris classification
-# ----------------------
-#
-# Quantum and classical nodes
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# To encode real-valued vectors into the amplitudes of a quantum state, we
-# use a 2-qubit simulator.
+
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane.optimize import NesterovMomentumOptimizer
-dev = qml.device("default.qubit", wires=2)
-
-##############################################################################
-# State preparation is not as simple as when we represent a bitstring with
-# a basis state. Every input x has to be translated into a set of angles
-# which can get fed into a small routine for state preparation. To
-# simplify things a bit, we will work with data from the positive
-# subspace, so that we can ignore signs (which would require another
-# cascade of rotations around the z axis).
-#
-# The circuit is coded according to the scheme in `MÃ¶ttÃ¶nen, et al.
-# (2004) <https://arxiv.org/abs/quant-ph/0407010>`__, orâ€”as presented
-# for positive vectors onlyâ€”in `Schuld and Petruccione
-# (2018) <https://link.springer.com/book/10.1007/978-3-319-96424-9>`__. We
-# had to also decompose controlled Y-axis rotations into more basic
-# circuits following `Nielsen and Chuang
-# (2010) <http://www.michaelnielsen.org/qcqi/>`__.
 
 
-def get_angles(x):
-
-    beta0 = 2 * np.arcsin(np.sqrt(x[1] ** 2) / np.sqrt(x[0] ** 2 + x[1] ** 2 + 1e-12))
-    beta1 = 2 * np.arcsin(np.sqrt(x[3] ** 2) / np.sqrt(x[2] ** 2 + x[3] ** 2 + 1e-12))
-    beta2 = 2 * np.arcsin(
-        np.sqrt(x[2] ** 2 + x[3] ** 2) / np.sqrt(x[0] ** 2 + x[1] ** 2 + x[2] ** 2 + x[3] ** 2)
-    )
-
-    return np.array([beta2, -beta1 / 2, beta1 / 2, -beta0 / 2, beta0 / 2])
-
-
-def statepreparation(a):
-    qml.RY(a[0], wires=0)
-
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[1], wires=1)
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[2], wires=1)
-
-    qml.PauliX(wires=0)
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[3], wires=1)
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[4], wires=1)
-    qml.PauliX(wires=0)
-
-
-##############################################################################
-# Let™s test if this routine actually works.
-
-x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
-ang = get_angles(x)
-
-
-@qml.qnode(dev)
-def test(angles=None):
-
-    statepreparation(angles)
-
-    return qml.expval(qml.PauliZ(0))
-
-
-test(angles=ang)
-
-print("x               : ", x)
-print("angles          : ", ang)
-print("amplitude vector: ", np.real(dev._state))
-
-
-##############################################################################
-# Note that the ``default.qubit`` simulator provides a shortcut to
-# ``statepreparation`` with the command
-# ``qml.QubitStateVector(x, wires=[0, 1])``. However, some devices may not
-# support an arbitrary state-preparation routine.
-#
-# Since we are working with only 2 qubits now, we need to update the layer
-# function as well.
-
-
-def layer(W):
-    qml.Rot(W[0, 0], W[0, 1], W[0, 2], wires=0)
-    qml.Rot(W[1, 0], W[1, 1], W[1, 2], wires=1)
-    qml.CNOT(wires=[0, 1])
-
-
-##############################################################################
-# The variational classifier model and its cost remain essentially the
-# same, but we have to reload them with the new state preparation and
-# layer functions.
-
+dev = qml.device("default.qubit", wires=5)
 
 @qml.qnode(dev)
 def circuit(weights, angles=None):
     statepreparation(angles)
+    # qml.Hadamard(wires=0)
+    qml.Rot(weights[2], wires=0)
+    qml.CSWAP(wires=[0, 1, 3])
+    qml.CSWAP(wires = [0, 2, 4])
 
-    for W in weights:
-        layer(W)
+    for W in weights[0]:
+        layer(W, wires = [1,2])
 
-    return qml.expval(qml.PauliZ(0))
+    for W in weights[1]:
+        layer(W, [3,4])
+
+    qml.CSWAP(wires = [0, 1, 3])
+    qml.CSWAP(wires = [0, 2, 4])
+    # qml.RY(weights[2], wires=1)
+
+    return qml.expval(qml.PauliZ(1))
 
 
 def variational_classifier(var, angles=None):
@@ -132,18 +50,19 @@ def cost(weights, features, labels):
 # the last preprocessing step, we translate the inputs x to rotation
 # angles using the ``get_angles`` function we defined above.
 
-data = np.loadtxt("data/iris_classes1and2_scaled.txt")
-X = data[:, 0:2]
-print("First X sample (original)  :", X[0])
+import matplotlib.pyplot as plt
+from sklearn import datasets
 
-# import matplotlib.pyplot as plt
-# from sklearn import datasets
-# X, y = datasets.make_blobs(n_samples=50, centers=2, n_features=2, center_box=(0.6, 1.2), cluster_std = 0.03)
-#
-# Y = np.where(y == 0, -1, 1)
-# plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
-# plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
-# plt.show()
+X, y = datasets.make_blobs(n_samples=50, centers=2, n_features=2, center_box=(0, 100))
+Y = np.where(y == 0, -1, 1)
+plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
+plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
+plt.show()
+
+
+# data = np.loadtxt("data/iris_classes1and2_scaled.txt")
+# X = data[:, 0:2]
+# print("First X sample (original)  :", X[0])
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
@@ -159,8 +78,7 @@ print("First X sample (normalized):", X_norm[0])
 features = np.array([get_angles(x) for x in X_norm])
 print("First features sample      :", features[0])
 
-Y = data[:, -1]
-
+# Y = data[:, -1]
 ##############################################################################
 # These angles are our new features, which is why we have renamed X to
 # â€œfeaturesâ€ above. Letâ€™s plot the stages of preprocessing and play around
@@ -168,6 +86,7 @@ Y = data[:, -1]
 # classes well, while others are less informative.
 #
 # *Note: To run the following code you need the matplotlib library.*
+
 
 plt.figure()
 plt.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], c="r", marker="o", edgecolors="k")
@@ -220,17 +139,19 @@ X_val = X[index[num_train:]]
 
 num_qubits = 2
 num_layers = 1
-var_init = (0.01 * np.random.randn(num_layers, num_qubits, 3), 0.0)
+var_init = ((0.01 * np.random.randn(num_layers, num_qubits, 3),
+             0.01 * np.random.randn(num_layers, num_qubits, 3),
+             0.01 * np.random.randn(num_layers, num_qubits, 3)),
+            0.0)
 
 ##############################################################################
 # Again we optimize the cost. This may take a little patience.
-
 opt = NesterovMomentumOptimizer(0.01)
-batch_size = 5
+batch_size = 10
 
 # train the variational classifier
 var = var_init
-for it in range(100):
+for it in range(1000):
 
     # Update the weights by one optimizer step
     batch_index = np.random.randint(0, num_train, (batch_size,))
@@ -250,7 +171,6 @@ for it in range(100):
         "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
         "".format(it + 1, cost(var, features, Y), acc_train, acc_val)
     )
-    print( var )
 
 ##############################################################################
 # We can plot the continuous output of the variational classifier for the

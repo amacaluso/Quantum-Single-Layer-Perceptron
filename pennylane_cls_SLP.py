@@ -7,26 +7,12 @@
 #
 # To encode real-valued vectors into the amplitudes of a quantum state, we
 # use a 2-qubit simulator.
+# from Utils_qml import *
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane.optimize import NesterovMomentumOptimizer
 dev = qml.device("default.qubit", wires=5)
 
-##############################################################################
-# State preparation is not as simple as when we represent a bitstring with
-# a basis state. Every input x has to be translated into a set of angles
-# which can get fed into a small routine for state preparation. To
-# simplify things a bit, we will work with data from the positive
-# subspace, so that we can ignore signs (which would require another
-# cascade of rotations around the z axis).
-#
-# The circuit is coded according to the scheme in `MÃ¶ttÃ¶nen, et al.
-# (2004) <https://arxiv.org/abs/quant-ph/0407010>`__, orâ€”as presented
-# for positive vectors onlyâ€”in `Schuld and Petruccione
-# (2018) <https://link.springer.com/book/10.1007/978-3-319-96424-9>`__. We
-# had to also decompose controlled Y-axis rotations into more basic
-# circuits following `Nielsen and Chuang
-# (2010) <http://www.michaelnielsen.org/qcqi/>`__.
 
 
 def get_angles(x):
@@ -56,26 +42,45 @@ def statepreparation(a):
     qml.PauliX(wires=1)
 
 
-##############################################################################
-# Letâ€™s test if this routine actually works.
 
-x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
-ang = get_angles(x)
+def square_loss(labels, predictions):
+    loss = 0
+    for l, p in zip(labels, predictions):
+        loss = loss + (l - p) ** 2
 
-
-@qml.qnode(dev)
-def test(angles=None):
-
-    statepreparation(angles)
-
-    return qml.expval(qml.PauliZ(0))
+    loss = loss / len(labels)
+    return loss
 
 
-test(angles=ang)
 
-print("x               : ", x)
-print("angles          : ", ang)
-print("amplitude vector: ", np.real(dev._state))
+def accuracy(labels, predictions):
+    loss = 0
+    for l, p in zip(labels, predictions):
+        if abs(l - p) < 1e-5:
+            loss = loss + 1
+    loss = loss / len(labels)
+
+    return loss
+
+
+
+# x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
+# ang = get_angles(x)
+#
+#
+# @qml.qnode(dev)
+# def test(angles=None):
+#
+#     statepreparation(angles)
+#
+#     return qml.expval(qml.PauliZ(0))
+
+
+# test(angles=ang)
+#
+# print("x               : ", x)
+# print("angles          : ", ang)
+# print("amplitude vector: ", np.real(dev._state))
 
 
 ##############################################################################
@@ -109,7 +114,7 @@ def circuit(weights, angles=None):
     qml.CSWAP(wires = [0, 2, 4])
 
     for W in weights[0]:
-        layer(W, [1,2])
+        layer(W, wires = [1,2])
 
     for W in weights[1]:
         layer(W, [3,4])
@@ -141,9 +146,34 @@ def cost(weights, features, labels):
 # the last preprocessing step, we translate the inputs x to rotation
 # angles using the ``get_angles`` function we defined above.
 
-data = np.loadtxt("iris_classes1and2_scaled.txt")
+data = np.loadtxt("data/iris_classes1and2_scaled.txt")
 X = data[:, 0:2]
+Y = data[:, -1]
 print("First X sample (original)  :", X[0])
+
+
+
+import matplotlib.pyplot as plt
+from sklearn import datasets
+
+X, y = datasets.make_blobs(n_samples=50, centers=2,
+                           n_features=2, center_box=(0.6, 1.2),
+                           cluster_std = 0.03)
+plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
+plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
+plt.show()
+Y = np.where(y == 0, -1, 1)
+
+
+X_val, y_val = datasets.make_blobs(n_samples=10, centers=2,
+                                   n_features=2, center_box=(0.6, 1.2),
+                                   cluster_std = 0.03)
+
+Y_val = np.where(y_val == 0, -1, 1)
+plt.plot(X_val[:, 0][y_val == 0], X_val[:, 1][y_val == 0], 'g^')
+plt.plot(X_val[:, 0][y_val == 1], X_val[:, 1][y_val == 1], 'bs')
+plt.show()
+
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
@@ -159,7 +189,6 @@ print("First X sample (normalized):", X_norm[0])
 features = np.array([get_angles(x) for x in X_norm])
 print("First features sample      :", features[0])
 
-Y = data[:, -1]
 
 ##############################################################################
 # These angles are our new features, which is why we have renamed X to
@@ -229,13 +258,17 @@ var_init = ((0.01 * np.random.randn(num_layers, num_qubits, 3),
 
 ##############################################################################
 # Again we optimize the cost. This may take a little patience.
-
 opt = NesterovMomentumOptimizer(0.01)
 batch_size = 5
 
 # train the variational classifier
 var = var_init
-for it in range(100):
+
+acc_final_tr = 0
+acc_final_val = 0
+best_param = var_init
+
+for it in range(200):
 
     # Update the weights by one optimizer step
     batch_index = np.random.randint(0, num_train, (batch_size,))
@@ -250,13 +283,20 @@ for it in range(100):
     # Compute accuracy on train and validation set
     acc_train = accuracy(Y_train, predictions_train)
     acc_val = accuracy(Y_val, predictions_val)
+    if acc_final_tr < acc_train:
+        best_param = var
+        acc_final_tr = acc_train
+        acc_final_val = acc_val
+        iteration = it
 
     print(
         "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
         "".format(it + 1, cost(var, features, Y), acc_train, acc_val)
     )
 
-
+var
+var_init
+best_param
 ##############################################################################
 # We can plot the continuous output of the variational classifier for the
 # first two dimensions of the Iris data set.
@@ -276,7 +316,7 @@ X_grid = (X_grid.T / normalization).T  # normalize each input
 features_grid = np.array(
     [get_angles(x) for x in X_grid]
 )  # angles for state preparation are new features
-predictions_grid = [variational_classifier(var, angles=f) for f in features_grid]
+predictions_grid = [variational_classifier(best_param, angles=f) for f in features_grid]
 Z = np.reshape(predictions_grid, xx.shape)
 
 # plot decision regions
