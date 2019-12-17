@@ -1,18 +1,8 @@
 from Utils_qml import *
 
 ##############################################################################
-# 2. Iris classification
+# 1. Iris classification
 # ----------------------
-#
-# Quantum and classical nodes
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# To encode real-valued vectors into the amplitudes of a quantum state, we
-# use a 2-qubit simulator.
-import pennylane as qml
-from pennylane import numpy as np
-from pennylane.optimize import NesterovMomentumOptimizer
-dev = qml.device("default.qubit", wires=2)
 
 ##############################################################################
 # State preparation is not as simple as when we represent a bitstring with

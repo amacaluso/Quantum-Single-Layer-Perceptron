@@ -22,7 +22,6 @@ from pennylane.optimize import NesterovMomentumOptimizer
 
 
 
-
 def get_angles(x):
 
     beta0 = 2 * np.arcsin(np.sqrt(x[1] ** 2) / np.sqrt(x[0] ** 2 + x[1] ** 2 + 1e-12))
@@ -71,7 +70,43 @@ def accuracy(labels, predictions):
     return loss
 
 
+
+# x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
+# ang = get_angles(x)
+#
+#
+# @qml.qnode(dev)
+# def test(angles=None):
+#
+#     statepreparation(angles)
+#
+#     return qml.expval(qml.PauliZ(0))
+
+
+# test(angles=ang)
+#
+# print("x               : ", x)
+# print("angles          : ", ang)
+# print("amplitude vector: ", np.real(dev._state))
+
+
+##############################################################################
+# Note that the ``default.qubit`` simulator provides a shortcut to
+# ``statepreparation`` with the command
+# ``qml.QubitStateVector(x, wires=[0, 1])``. However, some devices may not
+# support an arbitrary state-preparation routine.
+#
+# Since we are working with only 2 qubits now, we need to update the layer
+# function as well.
+
+
 def layer(W, wires = None):
     qml.Rot(W[0, 0], W[0, 1], W[0, 2], wires=wires[0])
     qml.Rot(W[1, 0], W[1, 1], W[1, 2], wires=wires[1])
     qml.CNOT(wires=[wires[0], wires[1]])
+
+
+##############################################################################
+# The variational classifier model and its cost remain essentially the
+# same, but we have to reload them with the new state preparation and
+# layer functions.
