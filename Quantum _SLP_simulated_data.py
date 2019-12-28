@@ -19,7 +19,7 @@ print("First X sample (original)  :", X[0])
 from sklearn import datasets
 X, y = datasets.make_blobs(n_samples=100, centers=2,
                            n_features=2, center_box=(0, 1),
-                           cluster_std = 0.15) #, random_state = 111)
+                           cluster_std = 0.1) #, random_state = 111)
 plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
 plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
 plt.show()
