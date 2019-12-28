@@ -133,10 +133,23 @@ cost_vector
 
 plt.plot(std_dev,vl_accuracy_vector, 'g^')
 plt.plot(std_dev, tr_accuracy_vector, 'bs')
-plt.plot(std_dev, cost_vector)
-plt.legend()
+plt.plot(std_dev, cost_vector, 'r')
+plt.legend(['Val', 'Train', 'Cost'])
+plt.title('Performance')
+plt.xlabel('Standard deviation')
+plt.savefig('Performance.png')
 plt.show()
-Y = np.where(y == 0, -1, 1)
+
+X, y = datasets.make_blobs(n_samples=100, centers=[[0.2, 0.8], [0.7, 0.1]],
+                           n_features=2, center_box=(0, 1),
+                           cluster_std=0.2, random_state=seeds[i])
+plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
+plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
+plt.title('Data')
+plt.xlabel('$X_1$')
+plt.ylabel('$X_2$')
+plt.savefig('Data.png')
+plt.show()
 
 # ##############################################################################
     # # We can plot the continuous output of the variational classifier for the
