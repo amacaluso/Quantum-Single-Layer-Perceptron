@@ -53,7 +53,8 @@ def cost(weights, features, labels):
 import matplotlib.pyplot as plt
 from sklearn import datasets
 
-X, y = datasets.make_blobs(n_samples=50, centers=2, n_features=2, center_box=(0.6, 1.2), cluster_std = 0.03)
+X, y = datasets.make_blobs(n_samples=50, centers=2, n_features=2,
+                           center_box=(0.6, 1.2), cluster_std = 0.03)
 Y = np.where(y == 0, -1, 1)
 plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
 plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
