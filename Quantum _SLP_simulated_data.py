@@ -2,30 +2,22 @@ from Utils_qml import *
 
 ##############################################################################
 # Data
-# ~~~~
-#
-# We load the Iris data set. There is a bit of preprocessing to do in
-# order to encode the inputs into the amplitudes of a quantum state. In
-# the last preprocessing step, we translate the inputs x to rotation
-# angles using the ``get_angles`` function we defined above.
 
-data = np.loadtxt("data/iris_classes1and2_scaled.txt")
-X = data[:, 0:2]
-Y = data[:, -1]
-print("First X sample (original)  :", X[0])
+# data = np.loadtxt("data/iris_classes1and2_scaled.txt")
+# X = data[:, 0:2]
+# Y = data[:, -1]
+# print("First X sample (original)  :", X[0])
 
 
 # Simulated data
 from sklearn import datasets
-X, y = datasets.make_blobs(n_samples=100, centers=2,
+X, y = datasets.make_blobs(n_samples=500, centers=2,
                            n_features=2, center_box=(0, 1),
-                           cluster_std = 0.1) #, random_state = 111)
+                           cluster_std = 0.15, random_state = 5432)
 plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
 plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
 plt.show()
 Y = np.where(y == 0, -1, 1)
-
-
 
 
 # pad the vectors to size 2^2 with constant values
@@ -42,16 +34,6 @@ print("First X sample (normalized):", X_norm[0])
 features = np.array([get_angles(x) for x in X_norm])
 print("First features sample      :", features[0])
 
-
-##############################################################################
-# These angles are our new features, which is why we have renamed X to
-# â€œfeaturesâ€ above. Letâ€™s plot the stages of preprocessing and play around
-# with the dimensions (dim1, dim2). Some of them still separate the
-# classes well, while others are less informative.
-#
-# *Note: To run the following code you need the matplotlib library.*
-
-import matplotlib.pyplot as plt
 
 plt.figure()
 plt.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], c="r", marker="o", edgecolors="k")
@@ -139,7 +121,7 @@ X_val = X[index[num_train:]]
 ##############################################################################
 # Again we optimize the cost. This may take a little patience.
 opt = NesterovMomentumOptimizer(0.01)
-batch_size = 10
+batch_size = 100
 
 # train the variational classifier
 
@@ -147,7 +129,9 @@ acc_final_tr = 0
 acc_final_val = 0
 num_qubits = 2
 num_layers = 1
-
+cost_vector =  []
+train_vector =  []
+val_vector =  []
 
 seeds =[000]
 
@@ -181,6 +165,9 @@ for seed in seeds:
             acc_final_val = acc_val
             best_seed = seed
             iteration = it
+        cost_vector.append(cost(var, features, Y))
+        train_vector.append(acc_train)
+        val_vector.append(acc_val)
 
         print(
             "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
