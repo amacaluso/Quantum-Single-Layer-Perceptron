@@ -33,21 +33,19 @@ def cost(weights, features, labels):
     predictions = [variational_classifier(weights, angles=f) for f in features]
     return square_loss(labels, predictions)
 
-std_dev = np.arange(0.05, 0.5, 0.02)
+std_dev = np.arange(0.05, 0.8, 0.02)
 n = len(std_dev)
 seeds = np.random.randint(1, 10**5, n)
-seeds_ms = np.random.randint(1, 10**5, 5)
+seeds_ms = np.random.randint(1, 10**5, 10)
 
 tr_accuracy_vector_all =[]
 vl_accuracy_vector_all =[]
 cost_vector_all = []
 
-tr_accuracy_vector =[]
-vl_accuracy_vector =[]
-cost_vector = []
-
-
 for i in range(n):
+    tr_accuracy_vector = []
+    vl_accuracy_vector = []
+    cost_vector = []
     print(i)
     X, y = datasets.make_blobs(n_samples = 100, centers = [[0.2, 0.8],[0.7, 0.1]] ,
                                n_features=2, center_box=(0, 1),
@@ -135,36 +133,71 @@ for i in range(n):
     vl_accuracy_vector_all.append(vl_accuracy_vector)
     cost_vector_all.append(cost_vector)
 
-var
-var_init
-best_param
 
 
+train_mean = []
+test_mean = []
+cost_mean = []
+train_sd = []
+test_sd = []
+cost_sd = []
 
-std_dev
-tr_accuracy_vector
-vl_accuracy_vector
-cost_vector
 
-plt.plot(std_dev,vl_accuracy_vector, 'g^')
-plt.plot(std_dev, tr_accuracy_vector, 'bs')
-plt.plot(std_dev, cost_vector, 'r')
-plt.legend(['Val', 'Train', 'Cost'])
-plt.title('Performance')
-plt.xlabel('Standard deviation')
-plt.savefig('Performance.png')
+for el in range(len(tr_accuracy_vector_all)):
+    train_mean.append(np.mean(tr_accuracy_vector_all[el]))
+    train_sd.append(np.std(tr_accuracy_vector_all[el]))
+    test_mean.append(np.mean(vl_accuracy_vector_all[el]))
+    test_sd.append(np.std(vl_accuracy_vector_all[el]))
+    cost_mean.append(np.mean(cost_vector_all[el]))
+    cost_sd.append(np.std(cost_vector_all[el]))
+
+train_mean = np.array(train_mean)
+test_mean = np.array(test_mean)
+cost_mean = np.array(cost_mean)
+train_sd = np.array(train_sd)
+test_sd = np.array(test_sd)
+cost_sd = np.array(cost_sd)
+import pandas as pd
+df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
+df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
+df.to_csv('dati_medi.csv', index=False)
+
+from matplotlib import pyplot as plt
+import numpy as np
+
+
+plt.plot(std_dev, train_mean, 'b-')
+plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
+plt.plot(std_dev, test_mean, 'k-')
+plt.fill_between(std_dev, test_mean-test_sd, test_mean+test_sd, alpha = 0.5)
+plt.plot(std_dev, cost_mean, 'g-')
+plt.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5)
 plt.show()
-
-X, y = datasets.make_blobs(n_samples=100, centers=[[0.2, 0.8], [0.7, 0.1]],
-                           n_features=2, center_box=(0, 1),
-                           cluster_std=0.2, random_state=seeds[i])
-plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
-plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
-plt.title('Data')
-plt.xlabel('$X_1$')
-plt.ylabel('$X_2$')
-plt.savefig('Data.png')
-plt.show()
+plt.close()
+# std_dev
+# tr_accuracy_vector
+# vl_accuracy_vector
+# cost_vector
+#
+# plt.plot(std_dev,vl_accuracy_vector, 'g^')
+# plt.plot(std_dev, tr_accuracy_vector, 'bs')
+# plt.plot(std_dev, cost_vector, 'r')
+# plt.legend(['Val', 'Train', 'Cost'])
+# plt.title('Performance')
+# plt.xlabel('Standard deviation')
+# plt.savefig('Performance.png')
+# plt.show()
+#
+# X, y = datasets.make_blobs(n_samples=100, centers=[[0.2, 0.8], [0.7, 0.1]],
+#                            n_features=2, center_box=(0, 1),
+#                            cluster_std=0.2, random_state=seeds[i])
+# plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
+# plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
+# plt.title('Data')
+# plt.xlabel('$X_1$')
+# plt.ylabel('$X_2$')
+# plt.savefig('Data.png')
+# plt.show()
 
 # ##############################################################################
     # # We can plot the continuous output of the variational classifier for the
