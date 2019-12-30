@@ -121,7 +121,7 @@ X_val = X[index[num_train:]]
 ##############################################################################
 # Again we optimize the cost. This may take a little patience.
 opt = NesterovMomentumOptimizer(0.01)
-batch_size = 100
+batch_size = num_train
 
 # train the variational classifier
 

@@ -36,6 +36,12 @@ def cost(weights, features, labels):
 std_dev = np.arange(0.05, 0.5, 0.02)
 n = len(std_dev)
 seeds = np.random.randint(1, 10**5, n)
+seeds_ms = np.random.randint(1, 10**5, 5)
+
+tr_accuracy_vector_all =[]
+vl_accuracy_vector_all =[]
+cost_vector_all = []
+
 tr_accuracy_vector =[]
 vl_accuracy_vector =[]
 cost_vector = []
@@ -83,46 +89,55 @@ for i in range(n):
     num_qubits = 2
     num_layers = 1
 
-    var_init = ((0.01 * np.random.randn(num_layers, num_qubits, 3),
-                 0.01 * np.random.randn(num_layers, num_qubits, 3),
-                 2*np.pi*np.random.random_sample()),
-                0.0)
-    var = var_init
+    seeds_ms
 
-    best_param = var_init
-    for it in range(50):
+    for seed in seeds_ms:
+        np.random.seed(seed)
 
-        # Update the weights by one optimizer step
-        batch_index = np.random.randint(0, num_train, (batch_size,))
-        feats_train_batch = feats_train[batch_index]
-        Y_train_batch = Y_train[batch_index]
-        var = opt.step(lambda v: cost(v, feats_train_batch, Y_train_batch), var)
+        var_init = ((0.01 * np.random.randn(num_layers, num_qubits, 3),
+                     0.01 * np.random.randn(num_layers, num_qubits, 3),
+                     2*np.pi*np.random.random_sample()),
+                    0.0)
+        var = var_init
 
-        # Compute predictions on train and validation set
-        predictions_train = [np.sign(variational_classifier(var, angles=f)) for f in feats_train]
-        predictions_val = [np.sign(variational_classifier(var, angles=f)) for f in feats_val]
+        best_param = var_init
+        for it in range(50):
 
-        # Compute accuracy on train and validation set
-        acc_train = accuracy(Y_train, predictions_train)
-        acc_val = accuracy(Y_val, predictions_val)
-        if acc_final_tr < acc_train:
-            best_param = var
-            acc_final_tr = acc_train
-            acc_final_val = acc_val
-            cost_final = cost(var, features, Y)
-            iteration = it
+            # Update the weights by one optimizer step
+            batch_index = np.random.randint(0, num_train, (batch_size,))
+            feats_train_batch = feats_train[batch_index]
+            Y_train_batch = Y_train[batch_index]
+            var = opt.step(lambda v: cost(v, feats_train_batch, Y_train_batch), var)
 
-        print(
-            "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
-            "".format(it + 1, cost(var, features, Y), acc_train, acc_val)
-        )
-    tr_accuracy_vector.append(acc_final_tr)
-    vl_accuracy_vector.append(acc_final_val)
-    cost_vector.append(cost_final)
+            # Compute predictions on train and validation set
+            predictions_train = [np.sign(variational_classifier(var, angles=f)) for f in feats_train]
+            predictions_val = [np.sign(variational_classifier(var, angles=f)) for f in feats_val]
 
-    var
-    var_init
-    best_param
+            # Compute accuracy on train and validation set
+            acc_train = accuracy(Y_train, predictions_train)
+            acc_val = accuracy(Y_val, predictions_val)
+            if acc_final_tr < acc_train:
+                best_param = var
+                acc_final_tr = acc_train
+                acc_final_val = acc_val
+                cost_final = cost(var, features, Y)
+                iteration = it
+
+            print(
+                "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
+                "".format(it + 1, cost(var, features, Y), acc_train, acc_val)
+            )
+        tr_accuracy_vector.append(acc_final_tr)
+        vl_accuracy_vector.append(acc_final_val)
+        cost_vector.append(cost_final)
+
+    tr_accuracy_vector_all.append(tr_accuracy_vector)
+    vl_accuracy_vector_all.append(vl_accuracy_vector)
+    cost_vector_all.append(cost_vector)
+
+var
+var_init
+best_param
 
 
 
