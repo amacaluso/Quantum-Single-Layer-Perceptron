@@ -33,7 +33,7 @@ def cost(weights, features, labels):
     predictions = [variational_classifier(weights, angles=f) for f in features]
     return square_loss(labels, predictions)
 
-std_dev = np.arange(0.05, 0.8, 0.02)
+std_dev = np.arange(0.1, 0.8, 0.02)
 n = len(std_dev)
 seeds = np.random.randint(1, 10**5, n)
 seeds_ms = np.random.randint(1, 10**5, 10)
@@ -160,18 +160,22 @@ cost_sd = np.array(cost_sd)
 import pandas as pd
 df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
 df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
-df.to_csv('dati_medi.csv', index=False)
+df.to_csv('data.csv', index=False)
 
 from matplotlib import pyplot as plt
 import numpy as np
 
 
-plt.plot(std_dev, train_mean, 'b-')
+plt.plot(std_dev, train_mean, linestyle = '-.', label="Train accuracy")
 plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
-plt.plot(std_dev, test_mean, 'k-')
+plt.plot(std_dev, test_mean, linestyle = '--', label="Test accuracy")
 plt.fill_between(std_dev, test_mean-test_sd, test_mean+test_sd, alpha = 0.5)
-plt.plot(std_dev, cost_mean, 'g-')
+plt.plot(std_dev, cost_mean, linestyle = ':', label="Cost function")
 plt.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5)
+plt.legend()
+plt.grid(alpha=0.4)
+plt.xlabel(r'Standard deviation')
+plt.savefig('Opt_overlapp.png', dpi = 800)
 plt.show()
 plt.close()
 # std_dev
