@@ -160,21 +160,34 @@ cost_sd = np.array(cost_sd)
 import pandas as pd
 df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
 df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
-df.to_csv('data.csv', index=False)
+# df.to_csv('data.csv', index=False)
 
-from matplotlib import pyplot as plt
-import numpy as np
+# from Utils_qml import *
+df = pd.read_csv('data.csv')
+std_dev = np.arange(0.1, 0.8, 0.02)
+train_mean = np.array(df.train_mean)
+test_mean = np.array(df.test_mean)
+cost_mean = np.array(df.cost_mean)
+train_sd = np.array(df.train_sd)
+test_sd = np.array(df.test_sd)
+cost_sd = np.array(df.cost_sd)
 
 
-plt.plot(std_dev, train_mean, linestyle = '-.', label="Train accuracy")
+plt.plot(std_dev, train_mean, linestyle = '-.', label="Training")
 plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
-plt.plot(std_dev, test_mean, linestyle = '--', label="Test accuracy")
+plt.plot(std_dev, test_mean, linestyle = '--', label="Testing")
 plt.fill_between(std_dev, test_mean-test_sd, test_mean+test_sd, alpha = 0.5)
-plt.plot(std_dev, cost_mean, linestyle = ':', label="Cost function")
-plt.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5)
-plt.legend()
+plt.legend(loc = 'upper center')
 plt.grid(alpha=0.4)
 plt.xlabel(r'Standard deviation')
+plt.ylabel(r'Accuracy')
+#plt.tick_params(axis='y', labelcolor='blue')
+plt2=plt.twinx()
+plt2.plot(std_dev, cost_mean, linestyle = ':', label="Cost function", color = 'green')
+plt2.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5, color = 'lightgreen')
+plt2.set_ylabel(r"$SSE$",color="green")
+plt2.tick_params(axis='y', labelcolor='green')
+plt2.legend(loc = 'lower left')
 plt.savefig('Opt_overlapp.png', dpi = 800)
 plt.show()
 plt.close()
