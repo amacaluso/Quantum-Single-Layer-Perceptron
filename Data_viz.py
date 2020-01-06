@@ -1,19 +1,19 @@
 import seaborn as sns, numpy as np, matplotlib.pyplot as plt, pandas as pd
-n=1000
-m1=-3
-m2=3
-
-df1 = pd.DataFrame((np.random.randn(n)+m1).reshape(-1,2), columns=['x','y'])
-df2 = pd.DataFrame((np.random.randn(n)+m2).reshape(-1,2), columns=['x','y'])
-df3 = pd.DataFrame(df1.values+df2.values, columns=['x','y'])
-df1['kind'] = 'dist1'
-df2['kind'] = 'dist2'
-df3['kind'] = 'dist1+dist2'
-df=pd.concat([df1,df2,df3])
+# n=1000
+# m1 = -3
+# m2 = 3
+#
+# df1 = pd.DataFrame((np.random.randn(n)+m1).reshape(-1,2), columns=['x','y'])
+# df2 = pd.DataFrame((np.random.randn(n)+m2).reshape(-1,2), columns=['x','y'])
+# df3 = pd.DataFrame(df1.values+df2.values, columns=['x','y'])
+# df1['kind'] = 'dist1'
+# df2['kind'] = 'dist2'
+# df3['kind'] = 'dist1+dist2'
+# df=pd.concat([df1,df2,df3])
 
 df = pd.DataFrame(X, columns=['$x_1$','$x_2$'])
-df['kind'] = Y = np.where(y == 0, 'class -1', 'class 1')
-
+Y = np.where(y == 0, 'class 0', 'class 1')
+df['kind'] = Y
 
 def multivariateGrid(col_x, col_y, col_k, df, k_is_color=False, scatter_alpha=.5):
     def colored_scatter(x, y, c=None):
@@ -78,15 +78,27 @@ import numpy as np
 import pandas as pd
 
 iterations = range(100)
+plt.figure(figsize=(5,5))
 # multiple line plot
-plt.plot(iterations, cost_vector, marker='', markerfacecolor='blue', markersize=12, color='skyblue', linewidth=4, label="Cost Function")
-plt.plot(iterations, train_vector, marker='', color='olive', linewidth=2, label="Train accuracy")
-plt.plot(iterations, val_vector, marker='', color='olive', linewidth=2, linestyle='dashed', label="Test accuracy")
+#plt.figure(figsize=(5,5))
+plt.tight_layout()
+plt.plot(iterations, train_vector, marker='', color='olive', linewidth=2, label="Training")
+plt.plot(iterations, val_vector, marker='', color='olive', linewidth=2, linestyle='dashed', label="Testing")
 plt.grid(alpha=0.3)
 plt.legend()
-plt.title('Performance of Quantum SLP classifier')
-plt.xlabel('Iterations')
+plt.ylim(0.2,1.2)
+#plt.title('Performance of Quantum SLP classifier')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt2=plt.twinx()
+# plt.plot(iterations, cost_vector, marker='', markerfacecolor='blue', markersize=12, color='skyblue', linewidth=4, label="Cost Function")
+plt.plot(iterations, cost_vector, marker='', markerfacecolor='lightblue', markersize=12, color='lightblue', linewidth=3, label="Cost Function")
+plt2.set_ylabel(r"$SSE$",color="lightblue")
+plt2.tick_params(axis='y', labelcolor='skyblue')
+plt.ylim(0.45,1.6)
+plt2.legend(loc = 'lower right')
 plt.savefig('Performance.png')
 plt.show()
 plt.close()
 
+#training metric

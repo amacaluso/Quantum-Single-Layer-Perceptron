@@ -11,14 +11,14 @@ from Utils_qml import *
 
 # Simulated data
 from sklearn import datasets
-X, y = datasets.make_blobs(n_samples=500, centers=2,
+X, y = datasets.make_blobs(n_samples=500, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
-                           cluster_std = 0.15, random_state = 5432)
+                           cluster_std = 0.2, random_state = 5432)
 plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
 plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
 plt.show()
 Y = np.where(y == 0, -1, 1)
-
+len(X)
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
