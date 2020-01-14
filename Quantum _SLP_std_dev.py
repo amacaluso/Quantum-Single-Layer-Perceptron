@@ -33,15 +33,19 @@ def cost(weights, features, labels):
     predictions = [variational_classifier(weights, angles=f) for f in features]
     return square_loss(labels, predictions)
 
-std_dev = np.arange(0.05, 0.5, 0.02)
+std_dev = np.arange(0.1, 0.8, 0.02)
 n = len(std_dev)
 seeds = np.random.randint(1, 10**5, n)
-tr_accuracy_vector =[]
-vl_accuracy_vector =[]
-cost_vector = []
+seeds_ms = np.random.randint(1, 10**5, 10)
 
+tr_accuracy_vector_all =[]
+vl_accuracy_vector_all =[]
+cost_vector_all = []
 
 for i in range(n):
+    tr_accuracy_vector = []
+    vl_accuracy_vector = []
+    cost_vector = []
     print(i)
     X, y = datasets.make_blobs(n_samples = 100, centers = [[0.2, 0.8],[0.7, 0.1]] ,
                                n_features=2, center_box=(0, 1),
@@ -83,73 +87,134 @@ for i in range(n):
     num_qubits = 2
     num_layers = 1
 
-    var_init = ((0.01 * np.random.randn(num_layers, num_qubits, 3),
-                 0.01 * np.random.randn(num_layers, num_qubits, 3),
-                 2*np.pi*np.random.random_sample()),
-                0.0)
-    var = var_init
+    seeds_ms
 
-    best_param = var_init
-    for it in range(50):
+    for seed in seeds_ms:
+        np.random.seed(seed)
 
-        # Update the weights by one optimizer step
-        batch_index = np.random.randint(0, num_train, (batch_size,))
-        feats_train_batch = feats_train[batch_index]
-        Y_train_batch = Y_train[batch_index]
-        var = opt.step(lambda v: cost(v, feats_train_batch, Y_train_batch), var)
+        var_init = ((0.01 * np.random.randn(num_layers, num_qubits, 3),
+                     0.01 * np.random.randn(num_layers, num_qubits, 3),
+                     2*np.pi*np.random.random_sample()),
+                    0.0)
+        var = var_init
 
-        # Compute predictions on train and validation set
-        predictions_train = [np.sign(variational_classifier(var, angles=f)) for f in feats_train]
-        predictions_val = [np.sign(variational_classifier(var, angles=f)) for f in feats_val]
+        best_param = var_init
+        for it in range(50):
 
-        # Compute accuracy on train and validation set
-        acc_train = accuracy(Y_train, predictions_train)
-        acc_val = accuracy(Y_val, predictions_val)
-        if acc_final_tr < acc_train:
-            best_param = var
-            acc_final_tr = acc_train
-            acc_final_val = acc_val
-            cost_final = cost(var, features, Y)
-            iteration = it
+            # Update the weights by one optimizer step
+            batch_index = np.random.randint(0, num_train, (batch_size,))
+            feats_train_batch = feats_train[batch_index]
+            Y_train_batch = Y_train[batch_index]
+            var = opt.step(lambda v: cost(v, feats_train_batch, Y_train_batch), var)
 
-        print(
-            "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
-            "".format(it + 1, cost(var, features, Y), acc_train, acc_val)
-        )
-    tr_accuracy_vector.append(acc_final_tr)
-    vl_accuracy_vector.append(acc_final_val)
-    cost_vector.append(cost_final)
+            # Compute predictions on train and validation set
+            predictions_train = [np.sign(variational_classifier(var, angles=f)) for f in feats_train]
+            predictions_val = [np.sign(variational_classifier(var, angles=f)) for f in feats_val]
 
-    var
-    var_init
-    best_param
+            # Compute accuracy on train and validation set
+            acc_train = accuracy(Y_train, predictions_train)
+            acc_val = accuracy(Y_val, predictions_val)
+            if acc_final_tr < acc_train:
+                best_param = var
+                acc_final_tr = acc_train
+                acc_final_val = acc_val
+                cost_final = cost(var, features, Y)
+                iteration = it
+
+            print(
+                "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
+                "".format(it + 1, cost(var, features, Y), acc_train, acc_val)
+            )
+        tr_accuracy_vector.append(acc_final_tr)
+        vl_accuracy_vector.append(acc_final_val)
+        cost_vector.append(cost_final)
+
+    tr_accuracy_vector_all.append(tr_accuracy_vector)
+    vl_accuracy_vector_all.append(vl_accuracy_vector)
+    cost_vector_all.append(cost_vector)
 
 
 
-std_dev
-tr_accuracy_vector
-vl_accuracy_vector
-cost_vector
+train_mean = []
+test_mean = []
+cost_mean = []
+train_sd = []
+test_sd = []
+cost_sd = []
 
-plt.plot(std_dev,vl_accuracy_vector, 'g^')
-plt.plot(std_dev, tr_accuracy_vector, 'bs')
-plt.plot(std_dev, cost_vector, 'r')
-plt.legend(['Val', 'Train', 'Cost'])
-plt.title('Performance')
-plt.xlabel('Standard deviation')
-plt.savefig('Performance.png')
+
+for el in range(len(tr_accuracy_vector_all)):
+    train_mean.append(np.mean(tr_accuracy_vector_all[el]))
+    train_sd.append(np.std(tr_accuracy_vector_all[el]))
+    test_mean.append(np.mean(vl_accuracy_vector_all[el]))
+    test_sd.append(np.std(vl_accuracy_vector_all[el]))
+    cost_mean.append(np.mean(cost_vector_all[el]))
+    cost_sd.append(np.std(cost_vector_all[el]))
+
+train_mean = np.array(train_mean)
+test_mean = np.array(test_mean)
+cost_mean = np.array(cost_mean)
+train_sd = np.array(train_sd)
+test_sd = np.array(test_sd)
+cost_sd = np.array(cost_sd)
+import pandas as pd
+df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
+df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
+# df.to_csv('data.csv', index=False)
+
+# from Utils_qml import *
+df = pd.read_csv('data.csv')
+std_dev = np.arange(0.1, 0.8, 0.02)
+train_mean = np.array(df.train_mean)
+test_mean = np.array(df.test_mean)
+cost_mean = np.array(df.cost_mean)
+train_sd = np.array(df.train_sd)
+test_sd = np.array(df.test_sd)
+cost_sd = np.array(df.cost_sd)
+
+
+plt.plot(std_dev, train_mean, linestyle = '-.', label="Training")
+plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
+plt.plot(std_dev, test_mean, linestyle = '--', label="Testing")
+plt.fill_between(std_dev, test_mean-test_sd, test_mean+test_sd, alpha = 0.5)
+plt.legend(loc = 'upper center')
+plt.grid(alpha=0.4)
+plt.xlabel(r'Standard deviation')
+plt.ylabel(r'Accuracy')
+#plt.tick_params(axis='y', labelcolor='blue')
+plt2=plt.twinx()
+plt2.plot(std_dev, cost_mean, linestyle = ':', label="Cost function", color = 'green')
+plt2.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5, color = 'lightgreen')
+plt2.set_ylabel(r"$SSE$",color="green")
+plt2.tick_params(axis='y', labelcolor='green')
+plt2.legend(loc = 'lower left')
+plt.savefig('Opt_overlapp.png', dpi = 800)
 plt.show()
-
-X, y = datasets.make_blobs(n_samples=100, centers=[[0.2, 0.8], [0.7, 0.1]],
-                           n_features=2, center_box=(0, 1),
-                           cluster_std=0.2, random_state=seeds[i])
-plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
-plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
-plt.title('Data')
-plt.xlabel('$X_1$')
-plt.ylabel('$X_2$')
-plt.savefig('Data.png')
-plt.show()
+plt.close()
+# std_dev
+# tr_accuracy_vector
+# vl_accuracy_vector
+# cost_vector
+#
+# plt.plot(std_dev,vl_accuracy_vector, 'g^')
+# plt.plot(std_dev, tr_accuracy_vector, 'bs')
+# plt.plot(std_dev, cost_vector, 'r')
+# plt.legend(['Val', 'Train', 'Cost'])
+# plt.title('Performance')
+# plt.xlabel('Standard deviation')
+# plt.savefig('Performance.png')
+# plt.show()
+#
+# X, y = datasets.make_blobs(n_samples=100, centers=[[0.2, 0.8], [0.7, 0.1]],
+#                            n_features=2, center_box=(0, 1),
+#                            cluster_std=0.2, random_state=seeds[i])
+# plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
+# plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
+# plt.title('Data')
+# plt.xlabel('$X_1$')
+# plt.ylabel('$X_2$')
+# plt.savefig('Data.png')
+# plt.show()
 
 # ##############################################################################
     # # We can plot the continuous output of the variational classifier for the
