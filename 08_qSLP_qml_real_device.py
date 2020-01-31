@@ -1,6 +1,6 @@
 from Utils_qml import *
 
-X, y = datasets.make_blobs(n_samples=10, centers=[[0.2, 0.8],[0.7, 0.1]],
+X, y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
                            cluster_std = 0.2, random_state = 5432)
 
@@ -38,19 +38,55 @@ for f in features:
     device = qml.device('qiskit.ibmq', wires=5, backend='ibmq_london')
     pred_real = test_qSLP_qml(f, best_param, dev= device)[0]
     predictions_qml_real.append(pred_real)
-    row = f.tolist()
-    row.append(pred_sim)
-    row.append(pred_real)
-    row = pd.Series(row)
+    # row = f.tolist()
+    # row.append(pred_sim)
+    # row.append(pred_real)
+    # row = pd.Series(row)
+    data_test = pd.concat([pd.Series(predictions_qml_sim),
+                           pd.Series(predictions_qml_real)],
+                           axis=1)
+    data_test.to_csv('data_test.csv')
+
+
 
 data_test = pd.concat([pd.Series(predictions_qml_sim),
                        pd.Series(predictions_qml_real),pd.Series(y)], axis=1)
 
+data_test.to_csv('data_test.csv')
+
+
+predictions_qasm = []
+predictions_qml = []
+
+for f in features:
+#    f = features[1]
+    device = qml.device("qiskit.aer", wires=5, backend='qasm_simulator')
+    pred_qasm = test_qSLP_qml(f, best_param, dev= device)[0]
+    predictions_qasm.append(pred_qasm)
+
+    device = qml.device("default.qubit", wires=5)
+    pred_qml = test_qSLP_qml(f, best_param, dev= device)[0]
+    predictions_qml.append(pred_qml)
+
+    data_test_qasm = pd.concat([pd.Series(predictions_qasm),
+                                pd.Series(predictions_qml)],
+                                axis=1)
+    data_test_qasm.to_csv('data_test_qasm.csv', index=False)
 
 
 
-provider = qiskit.IBMQ.get_provider(group='open')
-ibmq_ourense = provider.get_backend('ibmq_ourense')
+data_test_qasm = pd.concat([pd.Series(predictions_qml_sim),
+                            pd.Series(predictions_qml_real),pd.Series(y)],
+                            axis=1)
 
-backend = IBMQ.backends(operational=True, simulator=False)[2]
-pred = test_qSLP_qml(f, best_param)[0]
+data_test_qasm.to_csv('data_test_qasm.csv', index = False)
+
+
+
+
+
+# provider = qiskit.IBMQ.get_provider(group='open')
+# ibmq_ourense = provider.get_backend('ibmq_ourense')
+#
+# backend = IBMQ.backends(operational=True, simulator=False)[2]
+# pred = test_qSLP_qml(f, best_param)[0]
