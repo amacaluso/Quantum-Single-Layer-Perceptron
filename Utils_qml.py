@@ -21,7 +21,7 @@ from pennylane.templates import AmplitudeEmbedding
 from pennylane import numpy as np
 from pennylane.optimize import NesterovMomentumOptimizer
 
-
+from sklearn import datasets
 
 def get_angles(x):
 
@@ -49,6 +49,39 @@ def statepreparation(a):
     qml.RY(a[4], wires=2)
     qml.PauliX(wires=1)
 
+def qiskit_state_prep(qc, qr, a):
+    qc.ry(a[0], qr[1])
+    #qml.RY(a[0], wires=1)
+
+    # qml.CNOT(wires=[1, 2])
+    qc.cx(qr[0], qr[1])
+
+    # qml.RY(a[1], wires=2)
+    qc.ry(a[1], qr[1])
+
+    # qml.CNOT(wires=[1, 2])
+    qc.cx(qr[0], qr[1])
+
+    # qml.RY(a[2], wires=2)
+    qc.ry(a[2], qr[1])
+
+    # qml.PauliX(wires=1)
+    qc.x(qr[0])
+
+    # qml.CNOT(wires=[1, 2])
+    qc.cx(qr[0], qr[1])
+
+    # qml.RY(a[3], wires=2)
+    qc.ry(a[3], qr[1])
+
+    #qml.CNOT(wires=[1, 2])
+    qc.cx(qr[0], qr[1])
+
+    # qml.RY(a[4], wires=2)
+    qc.ry(a[4], qr[1])
+
+    # qml.PauliX(wires=1)
+    qc.x(qr[0])
 
 
 def square_loss(labels, predictions):
@@ -111,3 +144,153 @@ def layer(W, wires = None):
 # The variational classifier model and its cost remain essentially the
 # same, but we have to reload them with the new state preparation and
 # layer functions.
+
+
+def normalize_custom(x, C =1):
+    M = x[0] ** 2 + x[1] ** 2
+
+    x_normed = [
+        1 / np.sqrt(M * C) * complex(x[0], 0),  # 00
+        1 / np.sqrt(M * C) * complex(x[1], 0),  # 01
+    ]
+    return x_normed
+
+
+def test_qSLP_qiskit(x, param_circuit, device = 'qasm_simulator'):
+    theta_11 = param_circuit[0][0][0]  # array([ 0.01762722, -0.05147767,  0.00978738])
+    theta_12 = param_circuit[0][0][1]  # array([ 0.02240893,  0.01867558, -0.00977278])
+    theta_21 = param_circuit[1][0][0]  # array([ 5.60373788e-03, -1.11406652e+00, -1.03218852e-03])
+    theta_22 = param_circuit[1][0][1]  # array([0.00410599, 0.00144044, 0.01454274])
+    beta = param_circuit[2]
+
+        # x = X_norm[i]
+    ''' Create Circuit '''
+    # Create a Classical Register with 1 bit.
+    c = ClassicalRegister(1)
+    # Create a Quantum Circuit
+    control = QuantumRegister(1)
+    data = QuantumRegister(2)
+    temp = QuantumRegister(2)
+
+    qc = QuantumCircuit(control, data, temp, c)
+
+    qiskit_state_prep(qc, data, x)
+
+    ### Initialization ###
+    qc.ry(beta, control)
+
+    # qc.initialize(x, [data])
+
+    qc.h(temp)
+
+    qc.barrier()
+    '''Computation'''
+    qc.cswap(control, data[0], temp[0])
+    qc.cswap(control, data[1], temp[1])
+
+    # First layer
+    #theta_11 = param_circuit[0][0][0] #array([ 0.01762722, -0.05147767,  0.00978738])
+    qc.rz(theta_11[0], data[0] )
+    qc.ry(theta_11[1], data[0] )
+    qc.rz(theta_11[2], data[0] )
+
+    # theta_12 = param_circuit[0][0][1] #array([ 0.02240893,  0.01867558, -0.00977278])
+    qc.rz(theta_12[0], data[1] )
+    qc.ry(theta_12[1], data[1] )
+    qc.rz(theta_12[2], data[1] )
+
+    qc.cx(data[0], data[1])
+
+    # Second layer
+    # theta_21 = param_circuit[1][0][0] #array([ 5.60373788e-03, -1.11406652e+00, -1.03218852e-03])
+    qc.rz(theta_21[0], temp[0] )
+    qc.ry(theta_21[1], temp[0] )
+    qc.rz(theta_21[2], temp[0] )
+
+    # theta_22 = param_circuit[1][0][1] # array([0.00410599, 0.00144044, 0.01454274])
+    qc.rz(theta_22[0], temp[1] )
+    qc.ry(theta_22[1], temp[1] )
+    qc.rz(theta_22[2], temp[1] )
+
+    qc.cx(temp[0], temp[1])
+
+    qc.cswap(control, data[0], temp[0])
+    qc.cswap(control, data[1], temp[1])
+
+    #print(qc)
+
+    # qc.measure(ancilla1, c1)
+    qc.measure(data[0], c)  # .c_if(c1, 1)
+    # print(qc)
+    backend = BasicAer.get_backend(device)
+    job = execute(qc, backend, shots = 8192)
+    results = job.result()
+    answer = results.get_counts(qc)
+    # if answer['0'] > answer['1']:
+    #     y_pred = 1
+    # else:
+    #     y_pred = 0
+    y_pred = np.sum(answer['1']*(-1)+answer['0']*(1))/(answer['0']+answer['1'])
+    return [y_pred, qc]
+
+
+
+
+
+
+'''Test pennyLane'''
+
+# param_circuit = parameters
+
+def test_qSLP_qml(predictors, q_parameters, dev):
+    #dev = qml.device("default.qubit", wires=5)
+
+    @qml.qnode(dev)
+    def circuit(weights, angles=None):
+        theta_11 = weights[0][0][0]  # array([ 0.01762722, -0.05147767,  0.00978738])
+        theta_12 = weights[0][0][1]  # array([ 0.02240893,  0.01867558, -0.00977278])
+        theta_21 = weights[1][0][0]  # array([ 5.60373788e-03, -1.11406652e+00, -1.03218852e-03])
+        theta_22 = weights[1][0][1]  # array([0.00410599, 0.00144044, 0.01454274])
+        beta = weights[2]
+
+        statepreparation(angles)
+        qml.RY(weights[2], wires=0)
+
+        qml.CSWAP(wires=[0, 1, 3])
+        qml.CSWAP(wires = [0, 2, 4])
+
+        qml.Rot(theta_11[0], theta_11[1], theta_11[2], wires=1)
+        qml.Rot(theta_12[0], theta_12[1], theta_12[2], wires=2)
+        qml.CNOT(wires=[1, 2])
+
+        qml.Rot(theta_21[0], theta_21[1], theta_21[2], wires=3)
+        qml.Rot(theta_22[0], theta_22[1], theta_22[2], wires=4)
+        qml.CNOT(wires=[1, 2])
+
+        qml.CSWAP(wires = [0, 1, 3])
+        qml.CSWAP(wires = [0, 2, 4])
+        # qml.RY(weights[2], wires=1)
+        return qml.expval(qml.PauliZ(1))
+
+
+    def variational_classifier(var, angles=None):
+        weights = var[0]
+        bias = var[1]
+        return circuit(weights, angles=angles) + bias
+
+    pred_qml = [variational_classifier(q_parameters, angles=predictors)]
+    return pred_qml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
