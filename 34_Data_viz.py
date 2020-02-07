@@ -52,27 +52,36 @@ def multivariateGrid(col_x, col_y, col_k, df, k_is_color=False, scatter_alpha=.5
         color='grey',
         vertical=True
     )
+    plt.xlabel(r'$x_1$', fontsize = 16)
+    plt.ylabel(r'$x_2$', fontsize=16, rotation = 0)
     plt.legend(legends)
     plt.grid(alpha=0.3)
-    plt.savefig('Data.png')
+    plt.savefig('Data.png', dpi = 300)
+    plt.show()
+    plt.close()
 
 
 multivariateGrid('$x_1$', '$x_2$', 'kind', df=df)
-plt.close()
 
+
+
+# iterations = range(100)
+# opt_data = pd.DataFrame([pd.Series(iterations), pd.Series(train_vector),
+#                          pd.Series(val_vector), pd.Series(cost_vector)]).transpose()
+# opt_data.columns = ['iteration', 'train', 'test', 'cost']
+# opt_data.to_csv('opt_data.csv', index = False)
 
 # libraries
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-iterations = range(100)
 #plt.figure(figsize=(5,5))
 # multiple line plot
-#plt.figure(figsize=(5,5))
+plt.figure(figsize=(6,5))
 plt.tight_layout()
-plt.plot(iterations, train_vector, marker='', color='olive', linewidth=2, label="Training")
-plt.plot(iterations, val_vector, marker='', color='olive', linewidth=2, linestyle='dashed', label="Testing")
+plt.plot(opt_data.iteration, opt_data.train, marker='', color='mediumseagreen', linewidth=2, label="Training")
+plt.plot(opt_data.iteration,  opt_data.test, marker='', color='mediumseagreen', linewidth=2, linestyle='dashed', label="Testing")
 plt.grid(alpha=0.3)
 plt.legend()
 plt.ylim(0.2,1.2)
@@ -81,12 +90,14 @@ plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt2=plt.twinx()
 # plt.plot(iterations, cost_vector, marker='', markerfacecolor='blue', markersize=12, color='skyblue', linewidth=4, label="Cost Function")
-plt.plot(iterations, cost_vector, marker='', markerfacecolor='lightblue', markersize=12, color='lightblue', linewidth=3, label="Cost Function")
-plt2.set_ylabel(r"$SSE$",color="lightblue")
-plt2.tick_params(axis='y', labelcolor='skyblue')
+plt.plot(opt_data.iteration, opt_data.cost, marker='', markerfacecolor='lightblue', markersize=12,
+         color='sandybrown', linewidth=2, label="Cost Function")
+plt2.set_ylabel(r"$SSE$",color="sandybrown", rotation =270, labelpad=15 )
+plt2.tick_params(axis='y', labelcolor='sandybrown')
 plt.ylim(0.45,1.6)
 plt2.legend(loc = 'lower right')
-plt.savefig('Performance.png')
+plt.tight_layout()
+plt.savefig('Performance.png', dpi = 400)
 plt.show()
 plt.close()
 

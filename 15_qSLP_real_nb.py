@@ -22,7 +22,7 @@ parameters = best_param[0]
 bias = best_param[1]
 
 devices = ['vigo', 'london', 'essex', 'burlington']
-IBMQ_device = devices[2]
+IBMQ_device = devices[1]
 
 
 features = np.array([get_angles(x) for x in X_norm])
@@ -67,7 +67,7 @@ y_rl = np.where(data_test.Real_device>0, 1, 0)
 y_qasm = np.where(data_test.QASM>0, 1, 0)
 y_qml = np.where(data_test.QML>0, 1, 0)
 
-print(IBMQ_device + 'MSE Real Device:', np.mean((y_rl-y)**2))
+print(IBMQ_device + ' MSE Real Device:', np.mean((y_rl-y)**2))
 print( 'MSE QASM simulator: ', np.mean((y_qasm-y)**2))
 print('MSE PennyLane simulator: ', np.mean((y_qml-y)**2))
 
