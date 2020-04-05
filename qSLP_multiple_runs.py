@@ -1,4 +1,4 @@
-from Utils_qml import *
+from Utils import *
 from sklearn import datasets
 
 
@@ -157,13 +157,17 @@ cost_mean = np.array(cost_mean)
 train_sd = np.array(train_sd)
 test_sd = np.array(test_sd)
 cost_sd = np.array(cost_sd)
+
+
 import pandas as pd
 df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
 df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
 # df.to_csv('data.csv', index=False)
 
+
+#pd.read_csv('results/data.csv')
 # from Utils_qml import *
-df = pd.read_csv('data.csv')
+df = pd.read_csv('results/data.csv')
 std_dev = np.arange(0.1, 0.8, 0.02)
 train_mean = np.array(df.train_mean)
 test_mean = np.array(df.test_mean)
@@ -173,110 +177,31 @@ test_sd = np.array(df.test_sd)
 cost_sd = np.array(df.cost_sd)
 
 
+plt.figure(figsize=(7,4))
+
+fs_labels = 16
+fs_legend = 12
+
 plt.plot(std_dev, train_mean, linestyle = '-.', label="Training")
 plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
 plt.plot(std_dev, test_mean, linestyle = '--', label="Testing")
 plt.fill_between(std_dev, test_mean-test_sd, test_mean+test_sd, alpha = 0.5)
-plt.legend(loc = 'upper center')
+plt.legend(loc = 'upper center', fontsize=fs_legend)
 plt.grid(alpha=0.4)
-plt.xlabel(r'Standard deviation')
-plt.ylabel(r'Accuracy')
+plt.xlabel(r'Standard deviation', fontsize=fs_labels)
+plt.ylabel(r'Accuracy', fontsize=fs_labels)
+plt.xticks(fontsize=fs_labels)
+plt.yticks(fontsize=fs_labels)
 #plt.tick_params(axis='y', labelcolor='blue')
 plt2=plt.twinx()
 plt2.plot(std_dev, cost_mean, linestyle = ':', label="Cost function", color = 'green')
 plt2.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5, color = 'lightgreen')
-plt2.set_ylabel(r"$SSE$",color="green")
+plt2.set_ylabel(r"$SSE$",color="green",  fontsize = fs_labels)
 plt2.tick_params(axis='y', labelcolor='green')
-plt2.legend(loc = 'lower left')
-plt.savefig('Opt_overlapp.png', dpi = 800)
+plt2.legend(loc = 'lower left', fontsize=fs_legend)
+plt2.set_yticklabels(np.round(np.arange(0.4,1.6,0.2),2),fontsize=fs_labels)
+plt.tight_layout()
+plt.savefig('Opt_overlapp.png', dpi = 500)
 plt.show()
 plt.close()
-# std_dev
-# tr_accuracy_vector
-# vl_accuracy_vector
-# cost_vector
-#
-# plt.plot(std_dev,vl_accuracy_vector, 'g^')
-# plt.plot(std_dev, tr_accuracy_vector, 'bs')
-# plt.plot(std_dev, cost_vector, 'r')
-# plt.legend(['Val', 'Train', 'Cost'])
-# plt.title('Performance')
-# plt.xlabel('Standard deviation')
-# plt.savefig('Performance.png')
-# plt.show()
-#
-# X, y = datasets.make_blobs(n_samples=100, centers=[[0.2, 0.8], [0.7, 0.1]],
-#                            n_features=2, center_box=(0, 1),
-#                            cluster_std=0.2, random_state=seeds[i])
-# plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
-# plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
-# plt.title('Data')
-# plt.xlabel('$X_1$')
-# plt.ylabel('$X_2$')
-# plt.savefig('Data.png')
-# plt.show()
-
-# ##############################################################################
-    # # We can plot the continuous output of the variational classifier for the
-    # # first two dimensions of the Iris data set.
-    #
-    # plt.figure()
-    # cm = plt.cm.RdBu
-    #
-    # # make data for decision regions
-    # xx, yy = np.meshgrid(np.linspace(0.0, 1.5, 20), np.linspace(0.0, 1.5, 20))
-    # X_grid = [np.array([x, y]) for x, y in zip(xx.flatten(), yy.flatten())]
-    #
-    # # preprocess grid points like data inputs above
-    # padding = 0.3 * np.ones((len(X_grid), 1))
-    # X_grid = np.c_[np.c_[X_grid, padding], np.zeros((len(X_grid), 1))]  # pad each input
-    # normalization = np.sqrt(np.sum(X_grid ** 2, -1))
-    # X_grid = (X_grid.T / normalization).T  # normalize each input
-    # features_grid = np.array(
-    #     [get_angles(x) for x in X_grid]
-    # )  # angles for state preparation are new features
-    # predictions_grid = [variational_classifier(best_param, angles=f) for f in features_grid]
-    # Z = np.reshape(predictions_grid, xx.shape)
-    #
-    # # plot decision regions
-    # cnt = plt.contourf(xx, yy, Z, levels=np.arange(-1, 1.1, 0.1), cmap=cm, alpha=0.8, extend="both")
-    # plt.contour(xx, yy, Z, levels=[0.0], colors=("black",), linestyles=("--",), linewidths=(0.8,))
-    # plt.colorbar(cnt, ticks=[-1, 0, 1])
-    #
-    #
-    # # plot data
-    # plt.scatter(
-    #     X_train[:, 0][Y_train == 1],
-    #     X_train[:, 1][Y_train == 1],
-    #     c="b",
-    #     marker="o",
-    #     edgecolors="k",
-    #     label="class 1 train",
-    # )
-    # plt.scatter(
-    #     X_val[:, 0][Y_val == 1],
-    #     X_val[:, 1][Y_val == 1],
-    #     c="b",
-    #     marker="^",
-    #     edgecolors="k",
-    #     label="class 1 validation",
-    # )
-    # plt.scatter(
-    #     X_train[:, 0][Y_train == -1],
-    #     X_train[:, 1][Y_train == -1],
-    #     c="r",
-    #     marker="o",
-    #     edgecolors="k",
-    #     label="class -1 train",
-    # )
-    # plt.scatter(
-    #     X_val[:, 0][Y_val == -1],
-    #     X_val[:, 1][Y_val == -1],
-    #     c="r",
-    #     marker="^",
-    #     edgecolors="k",
-    #     label="class -1 validation",
-    # )
-    #
-    # plt.legend()
-    # plt.show()
+plt.show()

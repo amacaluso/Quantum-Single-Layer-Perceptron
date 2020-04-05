@@ -1,17 +1,15 @@
-from Utils_qml import *
+from Utils import *
 
 ##############################################################################
 # Data
-
 # data = np.loadtxt("data/iris_classes1and2_scaled.txt")
 # X = data[:, 0:2]
 # Y = data[:, -1]
 # print("First X sample (original)  :", X[0])
 
-
 # Simulated data
 from sklearn import datasets
-X, y = datasets.make_blobs(n_samples=500, centers=[[0.2, 0.8],[0.7, 0.1]],
+X, y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
                            cluster_std = 0.2, random_state = 5432)
 plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
@@ -83,8 +81,8 @@ def circuit(weights, angles=None):
 
 def variational_classifier(var, angles=None):
     weights = var[0]
-    bias = var[1]
-    return circuit(weights, angles=angles) + bias
+    # bias = var[1]
+    return circuit(weights, angles=angles) #+ bias
 
 
 def cost(weights, features, labels):

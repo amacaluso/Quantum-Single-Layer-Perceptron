@@ -1,4 +1,4 @@
-from Utils_qml import *
+from Utils import *
 
 X, y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),

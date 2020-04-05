@@ -1,4 +1,4 @@
-from Utils_qml import *
+from Utils import *
 # Imported functions: get_angles, statepreparation, square_loss, accuracy, layer
 
 

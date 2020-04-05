@@ -1,4 +1,4 @@
-from Utils_qml import *
+from Utils import *
 
 ##############################################################################
 # 1. Iris classification

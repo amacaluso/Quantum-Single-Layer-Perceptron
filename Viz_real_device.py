@@ -1,6 +1,6 @@
-from Utils_qml import *
+from Utils import *
 
-X, y = datasets.make_blobs(n_samples=20, centers=[[0.2, 0.8],[0.7, 0.1]],
+X, y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
                            cluster_std = 0.2, random_state = 5432)
 
@@ -19,7 +19,7 @@ y_qasm = np.where(data_vigo.QASM>0, 1, 0)
 y_qml = np.where(data_vigo.QML>0, 1, 0)
 
 
-print('London:', np.mean((y_london-y)**2))
+#print('London:', np.mean((y_london-y)**2))
 print('Vigo:', np.mean((y_vigo-y)**2))
 print('Essex:', np.mean((y_essex-y)**2))
 print('Burlington:', np.mean((y_burlington-y)**2))
