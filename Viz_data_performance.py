@@ -60,9 +60,9 @@ def multivariateGrid(col_x, col_y, col_k, df, k_is_color=False, scatter_alpha=.5
         vertical=True
     )
     plt.tight_layout()
-    plt.xlabel(r'$x_1$', fontsize = 18)
-    plt.ylabel(r'$x_2$', fontsize=18, rotation = 0)
-    plt.legend(legends, fontsize=14)
+    plt.xlabel(r'$x_1$', fontsize = 20)
+    plt.ylabel(r'$x_2$', fontsize=20, rotation = 0)
+    plt.legend(legends, fontsize=18, loc = 'lower left')
     plt.grid(alpha=0.3)
     plt.xticks(fontsize=18)
     plt.yticks(fontsize=18)
@@ -83,20 +83,20 @@ multivariateGrid('$x_1$', '$x_2$', 'kind', df=df)
 
 # libraries
 
-opt_data = pd.read_csv('opt_data.csv')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+opt_data = pd.read_csv('results/opt_data.csv')
 
 
 fs_labels = 17
-fs_legend = 13
+fs_legend = 15.5
 
 #plt.figure(figsize=(5,5))
 # multiple line plot
 plt.figure(figsize=(6,5))
-plt.plot(opt_data.iteration, opt_data.train, marker='', color='mediumseagreen', linewidth=2, label="Training")
-plt.plot(opt_data.iteration,  opt_data.test, marker='', color='mediumseagreen', linewidth=2, linestyle='dashed', label="Testing")
+plt.plot(opt_data.iteration,  opt_data.test, marker='', color='mediumseagreen', linewidth=2, linestyle='dashed', label="Test accuracy")
+plt.plot(opt_data.iteration, opt_data.train, marker='', color='mediumseagreen', linewidth=2, label="Train accuracy")
 plt.grid(alpha=0.3)
 plt.legend(fontsize=fs_legend)
 plt.ylim(0.2,1.2)
@@ -108,16 +108,50 @@ plt.ylabel('Accuracy', fontsize=fs_labels)
 plt2=plt.twinx()
 # plt.plot(iterations, cost_vector, marker='', markerfacecolor='blue', markersize=12, color='skyblue', linewidth=4, label="Cost Function")
 plt.plot(opt_data.iteration, opt_data.cost, marker='', markerfacecolor='lightblue',
-         markersize=12, color='sandybrown', linewidth=2, label="Cost Function")
+         markersize=12, color='sandybrown', linewidth=2, label="Cost function")
 plt2.set_ylabel(r"$SSE$",color="sandybrown", rotation =270, labelpad=15, fontsize = fs_labels )
 plt2.tick_params(axis='y', labelcolor='sandybrown')
 #plt2.xticks(fontsize=20)
 plt2.set_yticklabels(np.round(np.arange(0.4,1.6,0.2),2),fontsize=fs_labels)
 plt.ylim(0.45,1.6)
-plt2.legend(loc = 'lower right', fontsize=fs_legend)
+plt2.legend(loc = 'lower left', fontsize=fs_legend)
 plt.tight_layout()
 plt.savefig('Performance.png', dpi = 400)
 plt.show()
 plt.close()
 
 #training metric
+
+
+
+
+
+
+
+
+df = pd.read_csv('results/data_multiple_runs.csv')
+# from Utils_qml import *
+#df = pd.read_csv('results/data.csv')
+std_dev = np.arange(0.1, 0.8, 0.05)
+train_mean = np.array(df.train_mean)
+test_mean = np.array(df.test_mean)
+cost_mean = np.array(df.cost_mean)
+train_sd = np.array(df.train_sd)
+test_sd = np.array(df.test_sd)
+cost_sd = np.array(df.cost_sd)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

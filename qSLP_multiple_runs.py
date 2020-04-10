@@ -80,7 +80,7 @@ for i in range(n):
     X_val = X[index[num_train:]]
 
     opt = NesterovMomentumOptimizer(0.01)
-    batch_size = 10
+    batch_size = 10 #int(num_train/2)
 
     acc_final_tr = 0
     acc_final_val = 0
@@ -162,31 +162,23 @@ cost_sd = np.array(cost_sd)
 import pandas as pd
 df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
 df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
-# df.to_csv('data.csv', index=False)
+df.to_csv('results/data_multiple_runs_all.csv', index=False)
 
 
-#pd.read_csv('results/data.csv')
-# from Utils_qml import *
-df = pd.read_csv('results/data.csv')
-std_dev = np.arange(0.1, 0.8, 0.02)
-train_mean = np.array(df.train_mean)
-test_mean = np.array(df.test_mean)
-cost_mean = np.array(df.cost_mean)
-train_sd = np.array(df.train_sd)
-test_sd = np.array(df.test_sd)
-cost_sd = np.array(df.cost_sd)
 
 
-plt.figure(figsize=(7,4))
 
-fs_labels = 16
-fs_legend = 12
 
-plt.plot(std_dev, train_mean, linestyle = '-.', label="Training")
-plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
-plt.plot(std_dev, test_mean, linestyle = '--', label="Testing")
+fs_labels = 11
+fs_legend = 14
+
+plt.figure(figsize=(8,5.5))
+
+p2 = plt.plot(std_dev, test_mean, linestyle = '--', label="Test accuracy")
 plt.fill_between(std_dev, test_mean-test_sd, test_mean+test_sd, alpha = 0.5)
-plt.legend(loc = 'upper center', fontsize=fs_legend)
+p1 = plt.plot(std_dev, train_mean, linestyle = '-.', label="Train accuracy")
+plt.fill_between(std_dev, train_mean-train_sd, train_mean+train_sd, alpha = 0.5)
+# plt.legend(loc = 'upper center', fontsize=fs_legend)
 plt.grid(alpha=0.4)
 plt.xlabel(r'Standard deviation', fontsize=fs_labels)
 plt.ylabel(r'Accuracy', fontsize=fs_labels)
@@ -194,14 +186,24 @@ plt.xticks(fontsize=fs_labels)
 plt.yticks(fontsize=fs_labels)
 #plt.tick_params(axis='y', labelcolor='blue')
 plt2=plt.twinx()
-plt2.plot(std_dev, cost_mean, linestyle = ':', label="Cost function", color = 'green')
+p3 = plt2.plot(std_dev, cost_mean, linestyle = ':', label="Cost function", color = 'green')
 plt2.fill_between(std_dev, cost_mean-cost_sd, cost_mean+cost_sd, alpha = 0.5, color = 'lightgreen')
 plt2.set_ylabel(r"$SSE$",color="green",  fontsize = fs_labels)
 plt2.tick_params(axis='y', labelcolor='green')
-plt2.legend(loc = 'lower left', fontsize=fs_legend)
-plt2.set_yticklabels(np.round(np.arange(0.4,1.6,0.2),2),fontsize=fs_labels)
+
+#plt2.legend(loc = 'lower left', fontsize=fs_legend)
+
+# added these three lines
+lns = p3+p2+p1
+labs = [l.get_label() for l in lns]
+plt.legend(lns, labs, bbox_to_anchor=(.5, -.3), loc='lower center', ncol=3, fontsize=fs_legend)
+
+#plt.axes.legend(lns, labs)
+plt2.set_yticklabels(np.round(np.arange(0.4,1.9,0.2),2),fontsize=fs_labels)
 plt.tight_layout()
 plt.savefig('Opt_overlapp.png', dpi = 500)
 plt.show()
 plt.close()
-plt.show()
+
+
+
