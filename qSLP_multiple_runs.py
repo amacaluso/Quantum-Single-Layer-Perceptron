@@ -80,7 +80,7 @@ for i in range(n):
     X_val = X[index[num_train:]]
 
     opt = NesterovMomentumOptimizer(0.01)
-    batch_size = 10 #int(num_train/2)
+    batch_size = int(num_train/2)
 
     acc_final_tr = 0
     acc_final_val = 0
@@ -162,7 +162,7 @@ cost_sd = np.array(cost_sd)
 import pandas as pd
 df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
 df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
-df.to_csv('results/data_multiple_runs_all.csv', index=False)
+df.to_csv('results/data_multiple_runs_11-04.csv', index=False)
 
 
 
