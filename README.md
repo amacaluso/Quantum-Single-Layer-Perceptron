@@ -1,1 +1,1 @@
-# Quantum_SLP: A Variational Algorithm for Quantum Neural Networks
+# qSLP: A Variational Algorithm for Quantum Neural Networks
