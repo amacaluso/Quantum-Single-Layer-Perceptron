@@ -1,27 +1,26 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+# import matplotlib.pyplot as plt
+# import pandas as pd
 
 # Qiskit
-import qiskit
+# import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
-from qiskit import execute, IBMQ, Aer
+# from qiskit import execute, IBMQ, Aer
 from qiskit import BasicAer, execute
-from qiskit.tools.visualization import plot_state_city
-from qiskit.providers.aer import StatevectorSimulator
-from qiskit.tools.visualization import circuit_drawer
-from qiskit.circuit import Parameter
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
+# from qiskit.tools.visualization import plot_state_city
+# from qiskit.providers.aer import StatevectorSimulator
+# from qiskit.tools.visualization import circuit_drawer
+# from qiskit.circuit import Parameter
+# from qiskit.circuit import Parameter
 
 # Pennylane
 import pennylane as qml
+# from pennylane import numpy as np
+# from pennylane.templates import AmplitudeEmbedding
 from pennylane import numpy as np
-from pennylane.templates import AmplitudeEmbedding
-from pennylane import numpy as np
-from pennylane.optimize import NesterovMomentumOptimizer
-
-from sklearn import datasets
+# from pennylane.optimize import NesterovMomentumOptimizer
+#
+# from sklearn import datasets
 
 def get_angles(x):
 
@@ -291,6 +290,7 @@ def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
     import seaborn as sns
     from matplotlib import pyplot as plt
 
+
     def colored_scatter(x, y, c=None):
         def scatter(*args, **kwargs):
             args = (x, y)
@@ -310,6 +310,11 @@ def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
     legends = []
     for name, df_group in df.groupby(col_k):
         legends.append(name)
+        # if col_color:
+        #     colors_data = np.unique(df[col_color])
+        # else:
+        #     colors_data = ["or_blue", "or_peru"]
+
         if col_color:
             color = df_group[col_color].tolist()[0]
         g.plot_joint(
@@ -353,6 +358,22 @@ def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
 
 
 
+# Simulated data
+# from sklearn import datasets
+# X, y = datasets.make_blobs(n_samples=500, centers=[[-0.5, 0.0],[0.5, 1]],
+#                            n_features=2, center_box=(0, 1),
+#                            cluster_std = [[0.2,0],[.2, 0]], random_state = 5432)
+# plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
+# plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
+# plt.show()
+
+##############################################################################
+# Data
+
+# data = np.loadtxt("data/iris_classes1and2_scaled.txt")
+# X = data[:, 0:2]
+# Y = data[:, -1]
+# print("First X sample (original)  :", X[0])
 
 
 

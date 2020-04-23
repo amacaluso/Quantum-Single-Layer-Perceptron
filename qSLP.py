@@ -1,13 +1,5 @@
 from Utils import *
 
-##############################################################################
-# Data
-
-# data = np.loadtxt("data/iris_classes1and2_scaled.txt")
-# X = data[:, 0:2]
-# Y = data[:, -1]
-# print("First X sample (original)  :", X[0])
-
 
 # Simulated data
 from sklearn import datasets
@@ -18,6 +10,8 @@ plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
 plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
 plt.show()
 Y = np.where(y == 0, -1, 1)
+
+
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
@@ -104,7 +98,7 @@ X_val = X[index[num_train:]]
 
 # Again we optimize the cost. This may take a little patience.
 opt = NesterovMomentumOptimizer(0.01)
-batch_size = num_train
+batch_size = 10 #num_train
 
 # train the variational classifier
 
@@ -181,7 +175,6 @@ cnt = plt.contourf(xx, yy, Z, levels=np.arange(-1, 1.1, 0.1), cmap=cm, alpha=0.8
 plt.contour(xx, yy, Z, levels=[0.0], colors=("black",), linestyles=("--",), linewidths=(0.8,))
 plt.colorbar(cnt, ticks=[-1, 0, 1])
 
-
 # plot data
 plt.scatter(
     X_train[:, 0][Y_train == 1],
@@ -191,6 +184,7 @@ plt.scatter(
     edgecolors="k",
     label="class 1 train",
 )
+
 plt.scatter(
     X_val[:, 0][Y_val == 1],
     X_val[:, 1][Y_val == 1],

@@ -33,7 +33,7 @@ def cost(weights, features, labels):
     predictions = [variational_classifier(weights, angles=f) for f in features]
     return square_loss(labels, predictions)
 
-std_dev = np.arange(0.1, 0.8, 0.02)
+std_dev = np.arange(0.2, 0.8, 0.2) # np.arange(0.1, 0.8, 0.02)
 n = len(std_dev)
 seeds = np.random.randint(1, 10**5, n)
 seeds_ms = np.random.randint(1, 10**5, 10)
@@ -87,7 +87,6 @@ for i in range(n):
     num_qubits = 2
     num_layers = 1
 
-    seeds_ms
 
     for seed in seeds_ms:
         np.random.seed(seed)
@@ -163,9 +162,6 @@ import pandas as pd
 df = pd.DataFrame([train_mean, test_mean, cost_mean, train_sd, test_sd, cost_sd]).transpose()
 df.columns = ['train_mean', 'test_mean', 'cost_mean', 'train_sd', 'test_sd', 'cost_sd']
 df.to_csv('results/data_multiple_runs_11-04.csv', index=False)
-
-
-
 
 
 
