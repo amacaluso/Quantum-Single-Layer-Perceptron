@@ -6,6 +6,12 @@ dev = qml.device("default.qubit", wires=5)
 
 @qml.qnode(dev)
 def circuit(weights, angles=None):
+    """
+        Generete the circuit of the two-neurons qSLP
+        :param weights: (float) input parameters of the circuit
+        :param angles: (float) rotation to encode data in the quantum register
+        :return: (obj) quantum circuit
+        """
     statepreparation(angles)
     qml.RY(weights[2], wires=0)
     qml.CSWAP(wires=[0, 1, 3])
@@ -24,14 +30,28 @@ def circuit(weights, angles=None):
 
 
 def variational_classifier(var, angles=None):
+    """
+    Define the variational classifier and its parameter
+    :param var: parameter of the quantum gates
+    :param angles: (float) rotation to encode data in the quantum register
+    :return: (float) the prediction of the quantum classifier given  the angles encoding the input
+    """
     weights = var[0]
     bias = var[1]
     return circuit(weights, angles=angles) + bias
 
 
 def cost(weights, features, labels):
+    """
+    Compute the cost function of the classifier
+    :param weights: (float) vector of parameters of the quantum circuit
+    :param features: (float) vector of features in terms of angles for state preparation
+    :param labels: (integer) target variable to approximate
+    :return: (float) value of the computed cost function
+    """
     predictions = [variational_classifier(weights, angles=f) for f in features]
     return square_loss(labels, predictions)
+
 
 std_dev = np.arange(0.2, 0.8, 0.2) # np.arange(0.1, 0.8, 0.02)
 n = len(std_dev)
@@ -47,7 +67,7 @@ for i in range(n):
     vl_accuracy_vector = []
     cost_vector = []
     print(i)
-    X, y = datasets.make_blobs(n_samples = 100, centers = [[0.2, 0.8],[0.7, 0.1]] ,
+    X, y = datasets.make_blobs(n_samples = 500, centers = [[0.2, 0.8],[0.7, 0.1]] ,
                                n_features=2, center_box=(0, 1),
                                cluster_std = std_dev[i], random_state = seeds[i])
     plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')

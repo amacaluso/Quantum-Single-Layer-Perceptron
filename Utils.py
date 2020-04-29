@@ -1,28 +1,32 @@
 import numpy as np
-# import matplotlib.pyplot as plt
-# import pandas as pd
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # Qiskit
-# import qiskit
+import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
-# from qiskit import execute, IBMQ, Aer
+from qiskit import execute, IBMQ, Aer
 from qiskit import BasicAer, execute
-# from qiskit.tools.visualization import plot_state_city
-# from qiskit.providers.aer import StatevectorSimulator
-# from qiskit.tools.visualization import circuit_drawer
-# from qiskit.circuit import Parameter
-# from qiskit.circuit import Parameter
+from qiskit.tools.visualization import plot_state_city
+from qiskit.providers.aer import StatevectorSimulator
+from qiskit.tools.visualization import circuit_drawer
+from qiskit.circuit import Parameter
+from qiskit.circuit import Parameter
 
 # Pennylane
 import pennylane as qml
-# from pennylane import numpy as np
-# from pennylane.templates import AmplitudeEmbedding
 from pennylane import numpy as np
-# from pennylane.optimize import NesterovMomentumOptimizer
-#
-# from sklearn import datasets
+from pennylane.templates import AmplitudeEmbedding
+from pennylane import numpy as np
+from pennylane.optimize import NesterovMomentumOptimizer
+from sklearn import datasets
 
 def get_angles(x):
+    """
+    Determine the angles of rotation for a specific set of features
+    :param x: (float) input vector
+    :return: (float) vector of parameters for rotations
+    """
 
     beta0 = 2 * np.arcsin(np.sqrt(x[1] ** 2) / np.sqrt(x[0] ** 2 + x[1] ** 2 + 1e-12))
     beta1 = 2 * np.arcsin(np.sqrt(x[3] ** 2) / np.sqrt(x[2] ** 2 + x[3] ** 2 + 1e-12))
@@ -34,6 +38,11 @@ def get_angles(x):
 
 
 def statepreparation(a):
+    '''
+    State preparation routine to encode data in amplitude encoding
+    :param a: (float) angles
+    :return: circuit to encode a vector in amplitude encoding
+    '''
     qml.RY(a[0], wires=1)
 
     qml.CNOT(wires=[1, 2])
@@ -84,6 +93,12 @@ def qiskit_state_prep(qc, qr, a):
 
 
 def square_loss(labels, predictions):
+    """
+    Compute the square loss between the true value (labels) and the predictions
+    :param labels: (integer) true value for the target variable
+    :param predictions: (float) prediction of the classification model
+    :return: (float) square loss between true value and prediction
+    """
     loss = 0
     for l, p in zip(labels, predictions):
         loss = loss + (l - p) ** 2
@@ -94,6 +109,12 @@ def square_loss(labels, predictions):
 
 
 def accuracy(labels, predictions):
+    """
+     Compute the accuracy of a given prediction based on the true value (labels)
+    :param labels: (integer) true value for the target variable
+    :param predictions: (float) prediction of the classification model
+    :return: (float) accuracy of the prediction
+    """
     loss = 0
     for l, p in zip(labels, predictions):
         if abs(l - p) < 1e-5:
@@ -104,45 +125,11 @@ def accuracy(labels, predictions):
 
 
 
-# x = np.array([0.53896774, 0.79503606, 0.27826503, 0.0])
-# ang = get_angles(x)
-#
-#
-# @qml.qnode(dev)
-# def test(angles=None):
-#
-#     statepreparation(angles)
-#
-#     return qml.expval(qml.PauliZ(0))
-
-
-# test(angles=ang)
-#
-# print("x               : ", x)
-# print("angles          : ", ang)
-# print("amplitude vector: ", np.real(dev._state))
-
-
-##############################################################################
-# Note that the ``default.qubit`` simulator provides a shortcut to
-# ``statepreparation`` with the command
-# ``qml.QubitStateVector(x, wires=[0, 1])``. However, some devices may not
-# support an arbitrary state-preparation routine.
-#
-# Since we are working with only 2 qubits now, we need to update the layer
-# function as well.
-
 
 def layer(W, wires = None):
     qml.Rot(W[0, 0], W[0, 1], W[0, 2], wires=wires[0])
     qml.Rot(W[1, 0], W[1, 1], W[1, 2], wires=wires[1])
     qml.CNOT(wires=[wires[0], wires[1]])
-
-
-##############################################################################
-# The variational classifier model and its cost remain essentially the
-# same, but we have to reload them with the new state preparation and
-# layer functions.
 
 
 def normalize_custom(x, C =1):
@@ -235,55 +222,6 @@ def test_qSLP_qiskit(x, param_circuit, device = 'qasm_simulator'):
 
 
 
-
-
-'''Test pennyLane'''
-
-# param_circuit = parameters
-
-def test_qSLP_qml(predictors, q_parameters, dev):
-    #dev = qml.device("default.qubit", wires=5)
-
-    @qml.qnode(dev)
-    def circuit(weights, angles=None):
-        theta_11 = weights[0][0][0]  # array([ 0.01762722, -0.05147767,  0.00978738])
-        theta_12 = weights[0][0][1]  # array([ 0.02240893,  0.01867558, -0.00977278])
-        theta_21 = weights[1][0][0]  # array([ 5.60373788e-03, -1.11406652e+00, -1.03218852e-03])
-        theta_22 = weights[1][0][1]  # array([0.00410599, 0.00144044, 0.01454274])
-        beta = weights[2]
-
-        statepreparation(angles)
-        qml.RY(weights[2], wires=0)
-
-        qml.CSWAP(wires=[0, 1, 3])
-        qml.CSWAP(wires = [0, 2, 4])
-
-        qml.Rot(theta_11[0], theta_11[1], theta_11[2], wires=1)
-        qml.Rot(theta_12[0], theta_12[1], theta_12[2], wires=2)
-        qml.CNOT(wires=[1, 2])
-
-        qml.Rot(theta_21[0], theta_21[1], theta_21[2], wires=3)
-        qml.Rot(theta_22[0], theta_22[1], theta_22[2], wires=4)
-        qml.CNOT(wires=[1, 2])
-
-        qml.CSWAP(wires = [0, 1, 3])
-        qml.CSWAP(wires = [0, 2, 4])
-        # qml.RY(weights[2], wires=1)
-        return qml.expval(qml.PauliZ(1))
-
-
-    def variational_classifier(var, angles=None):
-        weights = var[0]
-        bias = var[1]
-        return circuit(weights, angles=angles) + bias
-
-    pred_qml = [variational_classifier(q_parameters, angles=predictors)]
-    return pred_qml
-
-
-
-
-
 def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
                      scatter_alpha=0.5):
     import numpy as np
@@ -355,26 +293,6 @@ def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
         colors_data[0][:2], colors_data[1][:2]), dpi=300, bbox_inches="tight")
     plt.show()
     plt.close()
-
-
-
-# Simulated data
-# from sklearn import datasets
-# X, y = datasets.make_blobs(n_samples=500, centers=[[-0.5, 0.0],[0.5, 1]],
-#                            n_features=2, center_box=(0, 1),
-#                            cluster_std = [[0.2,0],[.2, 0]], random_state = 5432)
-# plt.plot(X[:, 0][y == 0], X[:, 1][y == 0], 'g^')
-# plt.plot(X[:, 0][y == 1], X[:, 1][y == 1], 'bs')
-# plt.show()
-
-##############################################################################
-# Data
-
-# data = np.loadtxt("data/iris_classes1and2_scaled.txt")
-# X = data[:, 0:2]
-# Y = data[:, -1]
-# print("First X sample (original)  :", X[0])
-
 
 
 
