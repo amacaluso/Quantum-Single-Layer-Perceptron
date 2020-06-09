@@ -104,7 +104,7 @@ fig.savefig(
                                                                 color_cost,
                                                                 color_train,
                                                                 color_test),
-    dpi=300)
+    dpi=300, transparent=True)
 plt.show()
 plt.close()
 
@@ -181,6 +181,7 @@ fig.savefig(
                                                                  color_cost,
                                                                  color_train,
                                                                  color_test),
-    dpi=300, bbox_inches = "tight")
+    dpi=300, bbox_inches = "tight", transparent=True)
 plt.show()
 plt.close()
+
