@@ -69,7 +69,7 @@ ax1.grid(alpha=0.3)
 ax1.legend(fontsize=fs_legend)
 
 # set accuracy y-axis range
-ax1.set_ylim(0.2, 1.2)
+ax1.set_ylim(0.2, 1)
 # set axes labels fontsize
 [ticklab.set_fontsize(fs_labels) for ticklab in ax1.get_xticklabels()]
 [ticklab.set_fontsize(fs_labels) for ticklab in ax1.get_yticklabels()]
@@ -96,7 +96,7 @@ ax2.set_yticklabels(np.round(np.arange(0.4, 1.6, 0.2), 2), fontsize=fs_labels)
 # set secondary y-axis range
 ax2.set_ylim(0.45, 1.6)
 # set legend options
-ax2.legend(loc='lower left', fontsize=fs_legend)
+ax2.legend(loc='center right', fontsize=fs_legend)
 plt.tight_layout()
 
 fig.savefig(
