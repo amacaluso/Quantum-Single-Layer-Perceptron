@@ -1,6 +1,6 @@
 # qSLP: A Variational Algorithm for Quantum Neural Networks
 
-This repository contains the code to reproduce the results in the paper A Variational algorithm for Quantum Neural Networks, accepted in the INTERNATIONAL CONFERENCE ON COMPUTATIONAL SCIENCE 2020, Quantum Computing track. 
+This repository contains the code to reproduce the results in the paper [A Variational algorithm for Quantum Neural Networks](https://link.springer.com/chapter/10.1007/978-3-030-50433-5_45), published in the [INTERNATIONAL CONFERENCE ON COMPUTATIONAL SCIENCE 2020, Quantum Computing track](https://www.iccs-meeting.org/iccs2020/). 
 
 # Description
 The code is organised with one script per experiments in the paper. The qSLP algorithm allows reproducing the output of a Single Layer perceptron encoded in the amplitudes of a quantum state. In absence of a proper activation function a binary classification model on linearly separable data is estimated.
