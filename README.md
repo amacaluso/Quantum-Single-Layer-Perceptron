@@ -23,3 +23,8 @@ Some of the funcions for optimisation are taken from https://pennylane.ai/qml/de
 ## Issues
 
 For any issues or questions related to the code, open a new git issue or send a mail to antonio.macaluso2@unibo.it
+
+
+## Issues
+
+For any issues or questions related to the code, open a new git issue or send a mail to antonio.macaluso2@unibo.it
