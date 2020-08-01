@@ -18,3 +18,8 @@ The script *Viz_data_&_performance.py* plots the data and the performances of th
 The script *tab_results_real_device.py* collects the results.
 
 Some of the funcions for optimisation are taken from https://pennylane.ai/qml/demos/tutorial_variational_classifier.html
+
+
+## Issues
+
+For any issues or questions related to the code, open a new git issue or send a mail to antonio.macaluso2@unibo.it
