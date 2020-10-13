@@ -14,9 +14,9 @@
 
 from Utils import *
 
-X, y = datasets.make_blobs(n_samples=10, centers=[[0.2, 0.8],[0.7, 0.1]],
+X, y = datasets.make_blobs(n_samples=10, centers=[[0.2, 0.8], [0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
-                           cluster_std = 0.2, random_state = 5432)
+                           cluster_std=0.2, random_state=5432)
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
@@ -49,7 +49,7 @@ for f in features:
     predictions_qml_sim.append(pred_sim)
 
 
-    device = qml.device('qiskit.ibmq', wires=5, backend='ibmq_london')
+    device = qml.device('qiskit.ibmq', wires=5, backend='ibmq_santiago')
     pred_real = test_qSLP_qml(f, best_param, dev= device)[0]
     predictions_qml_real.append(pred_real)
     # row = f.tolist()
