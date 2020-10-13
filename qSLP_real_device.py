@@ -14,7 +14,7 @@
 
 from Utils import *
 
-X, y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
+X, y = datasets.make_blobs(n_samples=10, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
                            cluster_std = 0.2, random_state = 5432)
 

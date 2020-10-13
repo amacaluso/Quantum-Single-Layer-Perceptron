@@ -311,3 +311,47 @@ def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
 
 
 
+'''Test pennyLane'''
+
+# param_circuit = parameters
+
+def test_qSLP_qml(predictors, q_parameters, dev):
+    #dev = qml.device("default.qubit", wires=5)
+
+    @qml.qnode(dev)
+    def circuit(weights, angles=None):
+        theta_11 = weights[0][0][0]  # array([ 0.01762722, -0.05147767,  0.00978738])
+        theta_12 = weights[0][0][1]  # array([ 0.02240893,  0.01867558, -0.00977278])
+        theta_21 = weights[1][0][0]  # array([ 5.60373788e-03, -1.11406652e+00, -1.03218852e-03])
+        theta_22 = weights[1][0][1]  # array([0.00410599, 0.00144044, 0.01454274])
+        beta = weights[2]
+
+        statepreparation(angles)
+        qml.RY(weights[2], wires=0)
+
+        qml.CSWAP(wires=[0, 1, 3])
+        qml.CSWAP(wires = [0, 2, 4])
+
+        qml.Rot(theta_11[0], theta_11[1], theta_11[2], wires=1)
+        qml.Rot(theta_12[0], theta_12[1], theta_12[2], wires=2)
+        qml.CNOT(wires=[1, 2])
+
+        qml.Rot(theta_21[0], theta_21[1], theta_21[2], wires=3)
+        qml.Rot(theta_22[0], theta_22[1], theta_22[2], wires=4)
+        qml.CNOT(wires=[1, 2])
+
+        qml.CSWAP(wires = [0, 1, 3])
+        qml.CSWAP(wires = [0, 2, 4])
+        # qml.RY(weights[2], wires=1)
+        return qml.expval(qml.PauliZ(1))
+
+
+    def variational_classifier(var, angles=None):
+        weights = var[0]
+        bias = var[1]
+        return circuit(weights, angles=angles) + bias
+
+    pred_qml = [variational_classifier(q_parameters, angles=predictors)]
+    return pred_qml
+
+
