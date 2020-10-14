@@ -1,10 +1,23 @@
-import os.path, sys
-dir = os.path.join('tutorial')
-sys.path.insert(0, dir)
+# Copyright 2020 Antonio Macaluso
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 from qiskit_Utils import *
 
-X, Y = load_bivariate_gaussian(n_train=100)
+X, Y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
+                           n_features=2, center_box=(0, 1),
+                           cluster_std = 0.2, random_state = 5432)
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
@@ -20,7 +33,7 @@ print("First X sample (normalized):", X_norm[0])
 features = np.nan_to_num((np.array([get_angles(x) for x in X_norm])))
 print("First features sample      :", features[0])
 
-def get_Sx(ang, x=None, pad=True):
+def get_Sx(ang):
     backend = Aer.get_backend('unitary_simulator')
 
     q = QuantumRegister(2)
@@ -33,15 +46,6 @@ def get_Sx(ang, x=None, pad=True):
     U = result.get_unitary(circuit)
     S = Operator(U)
     return S
-
-
-x = X_norm[0]
-ang = get_angles(x)
-q = QuantumRegister(2)
-circuit = QuantumCircuit(q)
-circuit = state_preparation(ang, circuit, [0, 1])
-circuit.draw(output='mpl')
-plt.show()
 
 
 def linear_operator(param):
@@ -155,15 +159,17 @@ def cost(params, X, labels):
 
 
 X = X_norm.copy()
-
-# var_init = (0.01*np.random.randn(1), 0.01*np.random.randn(7))
-seed = 974# np.random.randint(0,10**3,1)[0]
-print(seed)
+# seed = 974 # iris:359, gaussian:527
+seed=np.random.randint(0,10**3,1)[0]
 np.random.seed(seed)
 var = (0.1*np.random.randn(13))
 params_init = var
-### iris --> 359
-### gaussian --> 527
+
+from qiskit.aqua.components.optimizers import AQGD
+optimizer_step = AQGD(maxiter=1, eta=2.0, disp=False)
+execute_circuit(params_init, x=X[2], print=True)
+
+
 num_data = len(Y)
 num_train = int(0.75 * num_data)
 index = np.random.permutation(range(num_data))
@@ -171,27 +177,42 @@ X_train = X[index[:num_train]]
 Y_train = Y[index[:num_train]]
 X_val = X[index[num_train:]]
 Y_val = Y[index[num_train:]]
-#
+batch_size = 10
+T = 10
+acc_final_tr = 0
+acc_final_val = 0
+current_params = params_init
 
-from qiskit.aqua.components.optimizers import AQGD
-optimizer = AQGD(maxiter=20, eta=2.0, disp=True)
-execute_circuit(params_init, x=X[2], print=True)
+for i in range(T):
+    batch_index = np.random.randint(0, num_train, (batch_size,))
+    X_batch = X_train[batch_index]
+    Y_batch = Y_train[batch_index]
+
+    obj_function = lambda params: cost(params, X_batch, Y_batch)
+    point, value, nfev = optimizer_step.optimize(len(current_params), obj_function, initial_point=current_params)
+    current_params = point
+
+    # Compute predictions on train and validation set
+    probs_train = [execute_circuit(point, x) for x in X_train]
+    probs_val = [execute_circuit(point, x) for x in X_val]
+
+    predictions_train = [predict(p) for p in probs_train]
+    predictions_val = [predict(p) for p in probs_val]
+
+    acc_train = accuracy(Y_train, predictions_train)
+    acc_val = accuracy(Y_val, predictions_val)
+
+    if acc_final_tr < acc_train:
+        best_param = var
+        acc_final_tr = acc_train
+        acc_final_val = acc_val
+        best_seed = seed
+        iteration = i
+
+    print(
+        "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
+        "".format(i + 1, value, acc_train, acc_val))
 
 
-
-obj_function = lambda params: cost(params, X_train, Y_train)
-point, value, nfev = optimizer.optimize(len(params_init), obj_function, initial_point=params_init)
-
-best_params = point
-
-probs_train = [execute_circuit(best_params, x) for x in X_train]
-probs_val = [execute_circuit(best_params, x) for x in X_val]
-
-predictions_train = [predict(p) for p in probs_train]
-predictions_val = [predict(p) for p in probs_val]
-
-acc_train = accuracy(Y_train, predictions_train)
-print('train accuracy',acc_train)
-
-acc_val = accuracy(Y_val, predictions_val)
-print('val accuracy',acc_val)
+probs_train = [execute_circuit(best_param, x) for x in X_train]
+probs_val = [execute_circuit(best_param, x) for x in X_val]

@@ -13,13 +13,7 @@
 # limitations under the License.
 
 
-import numpy as np
-import pandas as pd
-from sklearn import datasets
-# user defined packages
-import sys
-sys.path.insert(0, "./code")
-from Utils import multivariateGrid
+from qml_Utils import *
 
 # generate data
 X, y = datasets.make_blobs(n_samples=500, centers=[[0.2, 0.8], [0.7, 0.1]],

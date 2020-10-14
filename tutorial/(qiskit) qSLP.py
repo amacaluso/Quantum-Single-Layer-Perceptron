@@ -2,7 +2,7 @@ import os.path, sys
 dir = os.path.join('tutorial')
 sys.path.insert(0, dir)
 
-from Utils import *
+from qml_Utils import *
 from modeling import *
 from import_data import *
 

@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Utils import *
-from sklearn import datasets
+from qml_Utils import *
 
 
 dev = qml.device("default.qubit", wires=5)
