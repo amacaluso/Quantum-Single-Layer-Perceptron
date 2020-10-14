@@ -38,7 +38,7 @@ well in both cases, this strengthens the validity of the model which is independ
 
 Some of the functions for optimisation are taken from https://pennylane.ai/qml/demos/tutorial_variational_classifier.html
 
-### Pennylane implementation:
+### Qiskit implementation:
 
 - The script *qiskit_qSLP.py* contains the code for generating data and training a single classifier. Also it allows to visualise the two-layer qSLP.
 

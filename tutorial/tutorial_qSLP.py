@@ -1,32 +1,14 @@
-# Copyright 2020 Antonio Macaluso
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import os.path, sys
+dir = os.path.join('tutorial')
+sys.path.insert(0, dir)
 
+from Utils import *
+from import_data import *
 
-from qiskit_Utils import *
-
-X, Y = datasets.make_blobs(n_samples=500, centers=[[0.2, 0.8],[0.7, 0.1]],
-                           n_features=2, center_box=(0, 1),
-                           cluster_std = 0.2, random_state = 5432)
-df = pd.DataFrame(X, columns=['$x_1$', '$x_2$'])
-Y_labels = np.where(Y == 0, 'class 0', 'class 1')
-df['kind'] = Y_labels
-
-# specify additional column for classes colors (optional)
-group_color = np.where(Y == 0, 'orange', 'blue')
-df['grp_col'] = group_color
-# 2-D scatteplot (run without col_color for default colors)
-multivariateGrid('$x_1$', '$x_2$', 'kind', df=df, col_color='grp_col')
+# X, Y = load_iris(fraction=.5)
+X, Y = load_bivariate_gaussian(n_train=100)
+# X,Y = load_parity(plot=True)
+# X,Y = load_moon(fraction=.4, plot=True)
 
 
 # pad the vectors to size 2^2 with constant values
@@ -43,29 +25,48 @@ print("First X sample (normalized):", X_norm[0])
 features = np.nan_to_num((np.array([get_angles(x) for x in X_norm])))
 print("First features sample      :", features[0])
 
-def get_Sx(ang):
+
+
+# normalize each input
+normalization = np.sqrt(np.sum(X ** 2, -1))
+X_norm = (X.T / normalization).T
+print("First X sample (normalized):", X_norm[0])
+
+
+def get_Sx(ang=None, x=None, pad=False):
     backend = Aer.get_backend('unitary_simulator')
 
-    q = QuantumRegister(2)
-    circuit = QuantumCircuit(q)
-    circuit = state_preparation(ang, circuit, [0, 1])
+    if pad==True:
+        q = QuantumRegister(2)
+        circuit = QuantumCircuit(q)
+        circuit = state_preparation(ang, circuit, [0, 1])
+    elif pad==False:
+        x = x.astype(complex)
+        q = QuantumRegister(1)
+        circuit = QuantumCircuit(q)
+        circuit.initialize(x, [q])
 
     job = execute(circuit, backend)
     result = job.result()
-
     U = result.get_unitary(circuit)
     S = Operator(U)
     return S
 
 
-def linear_operator(param):
-    backend = Aer.get_backend('unitary_simulator')
 
-    data_reg = QuantumRegister(2)
-    qc = QuantumCircuit(data_reg)
-    qc.u3(param[0], param[1], param[2], data_reg[0])
-    qc.u3(param[3], param[4], param[5], data_reg[1])
-    qc.cx(data_reg[0], data_reg[1])
+def linear_operator(param, pad=False):
+    backend = Aer.get_backend('unitary_simulator')
+    '''pad variable influences the size of params vector'''
+    if pad==True:
+        data = QuantumRegister(2)
+        qc = QuantumCircuit(data_reg)
+        qc.u3(param[0], param[1], param[2], data[0])
+        qc.u3(param[3], param[4], param[5], data[1])
+        qc.cx(data[0], data[1])
+    elif pad==False:
+        data = QuantumRegister(1)
+        qc = QuantumCircuit(data)
+        qc.u3(param[0], param[1], param[2], data)
 
     job = execute(qc, backend)
     result = job.result()
@@ -74,11 +75,16 @@ def linear_operator(param):
     G = Operator(U)
     return G
 
-def sigma():
+def sigma(pad=False):
     backend = Aer.get_backend('unitary_simulator')
-    data = QuantumRegister(2)
-    qc = QuantumCircuit(data)
-    qc.id(data)
+    if pad==True:
+        data = QuantumRegister(2)
+        qc = QuantumCircuit(data)
+        qc.id(data)
+    if pad==False:
+        data = QuantumRegister(1)
+        qc = QuantumCircuit(data)
+        qc.id(data)
 
     job = execute(qc, backend)
     result = job.result()
@@ -100,61 +106,56 @@ def R_gate(beta):
     R = Operator(U)
     return R
 
-def execute_circuit(parameters, x=None, shots=1000, print=False):
-    '''
-    :param parameters:
-    :param x:
-    :param shots:
-    :param print:
-    :return:
-    '''
-
-    # Define the circuit for the quantum Single Layer Perceptron
+def create_circuit(parameters=None, x=None, pad=False):
     beta = parameters[0]
-    theta1 = parameters[1:7]
-    theta2 = parameters[7:13]
+    theta1 = parameters[1:4]
+    theta2 = parameters[4:7]
 
     control = QuantumRegister(1, 'control')
-    data = QuantumRegister(2, 'x')
-    temp = QuantumRegister(2, 'temp')
+    data = QuantumRegister(1, 'x')
+    temp = QuantumRegister(1, 'temp')
     c = ClassicalRegister(1)
     qc = QuantumCircuit(control, data, temp, c)
 
-    ang = np.nan_to_num(get_angles(x))
-    S = get_Sx(ang)
+    S=get_Sx(x=x)
     qc.unitary(S, data, label='$S_{x}$')
 
-    R = R_gate(beta)
+    R=R_gate(beta)
     qc.unitary(R, control, label='$R_{Y}(β)$')
 
     qc.barrier()
-    qc.cswap(control, data[0], temp[0])
-    qc.cswap(control, data[1], temp[1])
+    qc.cswap(control, data, temp)
 
     G1 = linear_operator(theta1)
     qc.unitary(G1, data, label='$G(θ_{1})$')
 
-
     G2 = linear_operator(theta2)
     qc.unitary(G2, temp, label='$G(θ_{2})$')
 
-    qc.cswap(control, data[1], temp[1])
-    qc.cswap(control, data[0], temp[0])
+    qc.cswap(control, data, temp)
+    qc.barrier()
 
     sig = sigma()
     qc.unitary(sig, data, label='$Σ$')
 
     qc.barrier()
     qc.measure(data[0], c)
+    return qc
 
-    # Execute the qSLP
+c=create_circuit(parameters=range(7), x=np.array([0,1]))
+c.draw(output='mpl')
+plt.show()
+
+def execute_circuit(parameters, x=None, shots=1000, print=False):
     backend = BasicAer.get_backend('qasm_simulator')
-    if print:
-        qc.draw(output='mpl')
-        plt.show()
-    result = execute(qc, backend, shots=shots).result()
 
-    counts = result.get_counts(qc)
+    circuit=create_circuit(parameters, x)
+    if print:
+        circuit.draw(output='mpl')
+        plt.show()
+    result = execute(circuit, backend, shots=shots).result()
+
+    counts = result.get_counts(circuit)
     result = np.zeros(2)
     for key in counts:
         result[int(key, 2)] = counts[key]
@@ -172,7 +173,7 @@ X = X_norm.copy()
 # seed = 974 # iris:359, gaussian:527
 seed=np.random.randint(0,10**3,1)[0]
 np.random.seed(seed)
-var = (0.1*np.random.randn(13))
+var = (0.001*np.random.randn(7))
 current_params = var
 
 from qiskit.aqua.components.optimizers import AQGD
@@ -200,7 +201,7 @@ for i in range(T):
     obj_function = lambda params: cost(params, X_batch, Y_batch)
     point, value, nfev = optimizer_step.optimize(len(current_params), obj_function,
                                                  initial_point=current_params)
-    current_params=point
+    current_params = point
 
     # Compute predictions on train and validation set
     probs_train = [execute_circuit(point, x) for x in X_train]
