@@ -1,5 +1,5 @@
 import os.path, sys
-dir = os.path.join('qiskit implementation')
+dir = os.path.join('tutorial')
 sys.path.insert(0, dir)
 
 from Utils import *
@@ -7,10 +7,9 @@ from modeling import *
 from import_data import *
 
 # X, Y = load_iris(fraction=.5)
-# X, Y = load_bivariate_gaussian(n_train=20)
+X, Y = load_bivariate_gaussian(n_train=100)
 # X,Y = load_parity(plot=True)
-
-X,Y = load_moon(fraction=.4, plot=True)
+# X,Y = load_moon(fraction=.4, plot=True)
 
 
 # pad the vectors to size 2^2 with constant values
@@ -30,10 +29,14 @@ print("First features sample      :", features[0])
 
 
 def get_Sx(ang, x=None, pad=True):
+    backend = Aer.get_backend('unitary_simulator')
+
     q = QuantumRegister(2)
-    c = ClassicalRegister(1)
-    circuit = QuantumCircuit(q, c)
+    circuit = QuantumCircuit(q)
     circuit = state_preparation(ang, circuit, [0, 1])
+
+    job = execute(circuit, backend)
+    result = job.result()
 
     U = result.get_unitary(circuit)
     S = Operator(U)
@@ -42,12 +45,54 @@ def get_Sx(ang, x=None, pad=True):
 
 x = X_norm[0]
 ang = get_angles(x)
+q = QuantumRegister(2)
+circuit = QuantumCircuit(q)
 circuit = state_preparation(ang, circuit, [0, 1])
-
 circuit.draw(output='mpl')
 plt.show()
 
 
+def linear_operator(param):
+    backend = Aer.get_backend('unitary_simulator')
+
+    data_reg = QuantumRegister(2)
+    qc = QuantumCircuit(data_reg)
+    qc.u3(param[0], param[1], param[2], data_reg[0])
+    qc.u3(param[3], param[4], param[5], data_reg[1])
+    qc.cx(data_reg[0], data_reg[1])
+
+    job = execute(qc, backend)
+    result = job.result()
+
+    U = result.get_unitary(qc)
+    G = Operator(U)
+    return G
+
+def sigma():
+    backend = Aer.get_backend('unitary_simulator')
+    data = QuantumRegister(2)
+    qc = QuantumCircuit(data)
+    qc.id(data)
+
+    job = execute(qc, backend)
+    result = job.result()
+
+    U = result.get_unitary(qc)
+    I = Operator(U)
+    return I
+
+def R_gate(beta):
+    backend = Aer.get_backend('unitary_simulator')
+    control = QuantumRegister(1)
+    qc = QuantumCircuit(control)
+    qc.ry(beta, control)
+
+    job = execute(qc, backend)
+    result = job.result()
+
+    U = result.get_unitary(qc)
+    R = Operator(U)
+    return R
 
 def execute_circuit(parameters, x=None, shots=1000, print=False):
 
@@ -67,24 +112,25 @@ def execute_circuit(parameters, x=None, shots=1000, print=False):
     S = get_Sx(ang)
     qc.unitary(S, data, label='$S_{x}$')
 
-    qc.ry(param0, control[0])
+    R = R_gate(param0)
+    qc.unitary(R, control, label='$R_{Y}(β)$')
 
     qc.barrier()
     qc.cswap(control, data[0], temp[0])
     qc.cswap(control, data[1], temp[1])
 
-    qc.barrier()
-    qc.u3(param1[0], param1[1], param1[2], data[0])
-    qc.u3(param1[3], param1[4], param1[5], data[1])
-    qc.cx(data[0], data[1])
+    G1 = linear_operator(param1)
+    qc.unitary(G1, data, label='$G(θ_{1})$')
 
-    qc.u3(param2[0], param2[1], param2[2], temp[0])
-    qc.u3(param2[3], param2[4], param2[5], temp[1])
-    qc.cx(temp[0], temp[1])
 
-    qc.barrier()
+    G2 = linear_operator(param2)
+    qc.unitary(G2, temp, label='$G(θ_{2})$')
+
     qc.cswap(control, data[1], temp[1])
     qc.cswap(control, data[0], temp[0])
+
+    sig = sigma()
+    qc.unitary(sig, data, label='$Σ$')
 
     qc.barrier()
     qc.measure(data[0], c)
@@ -126,7 +172,7 @@ X_val = X[index[num_train:]]
 Y_val = Y[index[num_train:]]
 #
 
-from qiskit.aqua.components.optimizers import ADAM, CG, AQGD
+from qiskit.aqua.components.optimizers import AQGD
 optimizer = AQGD(maxiter=20, eta=2.0, disp=True)
 execute_circuit(params_init, x=X[2], print=True)
 

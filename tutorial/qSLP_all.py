@@ -1,5 +1,5 @@
 import os.path, sys
-dir = os.path.join('qiskit implementation')
+dir = os.path.join('')
 sys.path.insert(0, dir)
 
 from Utils import *
