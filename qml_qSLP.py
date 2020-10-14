@@ -157,3 +157,5 @@ for seed in seeds:
             "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
             "".format(it + 1, cost(var, features, Y), acc_train, acc_val))
 
+
+

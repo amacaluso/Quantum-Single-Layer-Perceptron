@@ -180,3 +180,77 @@ def state_preparation(a, circuit, target):
     circuit.x(target[0])
 
     return circuit
+
+
+
+def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
+                     scatter_alpha=0.5):
+    import numpy as np
+    import seaborn as sns
+    from matplotlib import pyplot as plt
+
+
+    def colored_scatter(x, y, c=None):
+        def scatter(*args, **kwargs):
+            args = (x, y)
+            if c is not None:
+                kwargs['c'] = c
+            kwargs['alpha'] = scatter_alpha
+            plt.scatter(*args, **kwargs)
+
+        return scatter
+
+    g = sns.JointGrid(
+        x=col_x,
+        y=col_y,
+        data=df
+    )
+    color = None
+    legends = []
+    for name, df_group in df.groupby(col_k):
+        legends.append(name)
+        # if col_color:
+        #     colors_data = np.unique(df[col_color])
+        # else:
+        #     colors_data = ["or_blue", "or_peru"]
+
+        if col_color:
+            color = df_group[col_color].tolist()[0]
+        g.plot_joint(
+            colored_scatter(df_group[col_x], df_group[col_y], color),
+        )
+        sns.distplot(
+            df_group[col_x].values,
+            ax=g.ax_marg_x,
+            color=color,
+        )
+        sns.distplot(
+            df_group[col_y].values,
+            ax=g.ax_marg_y,
+            color=color,
+            vertical=True
+        )
+    # Do also global Hist:
+    sns.distplot(
+        df[col_x].values,
+        ax=g.ax_marg_x,
+        color='grey'
+    )
+    sns.distplot(
+        df[col_y].values.ravel(),
+        ax=g.ax_marg_y,
+        color='grey',
+        vertical=True
+    )
+    plt.tight_layout()
+    plt.xlabel(r'$x_1$', fontsize=20)
+    plt.ylabel(r'$x_2$', fontsize=20, rotation=0)
+    plt.legend(legends, fontsize=18, loc='lower left')
+    plt.grid(alpha=0.3)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    colors_data = np.unique(df[col_color])
+    plt.savefig('Data_{}_{}.png'.format(
+        colors_data[0][:2], colors_data[1][:2]), dpi=300, bbox_inches="tight")
+    plt.show()
+    plt.close()

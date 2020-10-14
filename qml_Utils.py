@@ -303,7 +303,7 @@ def multivariateGrid(col_x, col_y, col_k, df, col_color=None,
     plt.xticks(fontsize=18)
     plt.yticks(fontsize=18)
     colors_data = np.unique(df[col_color])
-    plt.savefig('results/Data_{}_{}.png'.format(
+    plt.savefig('Data_{}_{}.png'.format(
         colors_data[0][:2], colors_data[1][:2]), dpi=300, bbox_inches="tight")
     plt.show()
     plt.close()

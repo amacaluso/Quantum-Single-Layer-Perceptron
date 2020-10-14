@@ -15,9 +15,19 @@
 
 from qiskit_Utils import *
 
-X, Y = datasets.make_blobs(n_samples=50, centers=[[0.2, 0.8],[0.7, 0.1]],
+X, Y = datasets.make_blobs(n_samples=500, centers=[[0.2, 0.8],[0.7, 0.1]],
                            n_features=2, center_box=(0, 1),
                            cluster_std = 0.2, random_state = 5432)
+df = pd.DataFrame(X, columns=['$x_1$', '$x_2$'])
+Y_labels = np.where(Y == 0, 'class 0', 'class 1')
+df['kind'] = Y_labels
+
+# specify additional column for classes colors (optional)
+group_color = np.where(Y == 0, 'orange', 'blue')
+df['grp_col'] = group_color
+# 2-D scatteplot (run without col_color for default colors)
+multivariateGrid('$x_1$', '$x_2$', 'kind', df=df, col_color='grp_col')
+
 
 # pad the vectors to size 2^2 with constant values
 padding = 0.3 * np.ones((len(X), 1))
@@ -163,7 +173,7 @@ X = X_norm.copy()
 seed=np.random.randint(0,10**3,1)[0]
 np.random.seed(seed)
 var = (0.1*np.random.randn(13))
-params_init = var
+current_params = var
 
 from qiskit.aqua.components.optimizers import AQGD
 optimizer_step = AQGD(maxiter=1, eta=2.0, disp=False)
@@ -181,7 +191,6 @@ batch_size = 10
 T = 10
 acc_final_tr = 0
 acc_final_val = 0
-current_params = params_init
 
 for i in range(T):
     batch_index = np.random.randint(0, num_train, (batch_size,))
@@ -189,8 +198,8 @@ for i in range(T):
     Y_batch = Y_train[batch_index]
 
     obj_function = lambda params: cost(params, X_batch, Y_batch)
-    point, value, nfev = optimizer_step.optimize(len(current_params), obj_function, initial_point=current_params)
-    current_params = point
+    point, value, nfev = optimizer_step.optimize(len(current_params), obj_function,
+                                                 initial_point=current_params)
 
     # Compute predictions on train and validation set
     probs_train = [execute_circuit(point, x) for x in X_train]
@@ -203,15 +212,15 @@ for i in range(T):
     acc_val = accuracy(Y_val, predictions_val)
 
     if acc_final_tr < acc_train:
-        best_param = var
+        best_param = point
         acc_final_tr = acc_train
         acc_final_val = acc_val
         best_seed = seed
         iteration = i
 
     print(
-        "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.7f} | Acc validation: {:0.7f} "
-        "".format(i + 1, value, acc_train, acc_val))
+        "Iter: {:5d} | Cost: {:0.7f} | Acc train: {:0.3f} | Acc validation: {:0.3f} "
+        "".format(i + 1, cost(point, X_train, Y_train), acc_train, acc_val))
 
 
 probs_train = [execute_circuit(best_param, x) for x in X_train]
