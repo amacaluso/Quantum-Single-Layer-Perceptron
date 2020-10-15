@@ -29,7 +29,7 @@ def load_iris(fraction=1, plot=True, type=1):
 
 
 def load_bivariate_gaussian(n_train=20, plot=True):
-    X, Y = datasets.make_blobs(n_samples=n_train, centers=[[0.3, 0.8], [0.7, 0.3]], # centers=[[0.3, 0.8], [0.7, 0.3]]
+    X, Y = datasets.make_blobs(n_samples=n_train, centers=[[0.3, 0.7], [0.7, 0.3]], # centers=[[0.3, 0.8], [0.7, 0.3]]
                                n_features=2, center_box=(0, 1), cluster_std=0.1,
                                random_state=543)
     df = pd.DataFrame(X, columns=['x1', 'x2'])
