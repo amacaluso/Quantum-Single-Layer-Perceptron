@@ -8,9 +8,9 @@ from Utils import *
 def load_iris(fraction=1, plot=True, type=1):
 
     if type==1:
-        df = np.loadtxt("tutorial/data/iris_classes1and2_scaled.txt")
+        df = np.loadtxt("data/iris_classes1and2_scaled.txt")
     else:
-        df = np.loadtxt("tutorial/data/iris_classes2and3_scaled.txt")
+        df = np.loadtxt("data/iris_classes2and3_scaled.txt")
 
     df = pd.DataFrame(df)
     df.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'Y']
@@ -43,7 +43,7 @@ def load_bivariate_gaussian(n_train=20, plot=True):
 
 
 def load_parity(plot=True):
-    df = np.loadtxt("tutorial/data/parity.txt")
+    df = np.loadtxt("data/parity.txt")
     df = pd.DataFrame(df)
     df.columns = ['X' + str(i) for i in range(df.shape[1] - 1)] + ['Y']
     X = df.iloc[:, :-1].values
@@ -59,7 +59,7 @@ def load_parity(plot=True):
 
 def load_moon(fraction=1, plot=True, type=1):
 
-    df = np.loadtxt("tutorial/data/moons.txt")
+    df = np.loadtxt("data/moons.txt")
 
     df = pd.DataFrame(df)
     df.columns = ['X' + str(i) for i in range(df.shape[1] - 1)] + ['Y']

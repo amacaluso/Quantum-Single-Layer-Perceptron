@@ -19,6 +19,8 @@ import pandas as pd
 import seaborn as sns
 from sklearn import datasets
 
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 
 from qiskit import *
@@ -26,6 +28,7 @@ from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 from qiskit import BasicAer, execute, IBMQ, Aer
 from qiskit.circuit import Gate
 from qiskit.quantum_info.operators import Operator
+from qiskit.aqua.components.optimizers import ADAM, CG, AQGD
 
 
 
