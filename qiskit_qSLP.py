@@ -14,19 +14,20 @@
 
 
 from qiskit_Utils import *
+from import_data import *
 
-X, Y = datasets.make_blobs(n_samples=500, centers=[[0.2, 0.8],[0.7, 0.1]],
-                           n_features=2, center_box=(0, 1),
-                           cluster_std = 0.2, random_state = 5432)
-df = pd.DataFrame(X, columns=['$x_1$', '$x_2$'])
-Y_labels = np.where(Y == 0, 'class 0', 'class 1')
-df['kind'] = Y_labels
+X,Y = load_parity()
+dataset = 'parity'
 
-# specify additional column for classes colors (optional)
-group_color = np.where(Y == 0, 'orange', 'blue')
-df['grp_col'] = group_color
-# 2-D scatteplot (run without col_color for default colors)
-multivariateGrid('$x_1$', '$x_2$', 'kind', df=df, col_color='grp_col')
+# X,Y = load_moon()
+dataset = 'moon'
+
+X,Y = load_bivariate_gaussian()
+dataset = 'gaussian'
+
+
+# X,Y = load_iris(type=1)
+# X,Y = load_iris(type=0)
 
 
 # pad the vectors to size 2^2 with constant values
@@ -63,8 +64,8 @@ def linear_operator(param):
 
     data_reg = QuantumRegister(2)
     qc = QuantumCircuit(data_reg)
-    qc.u3(param[0], param[1], param[2], data_reg[0])
-    qc.u3(param[3], param[4], param[5], data_reg[1])
+    qc.u(param[0], param[1], param[2], data_reg[0])
+    qc.u(param[3], param[4], param[5], data_reg[1])
     qc.cx(data_reg[0], data_reg[1])
 
     job = execute(qc, backend)
@@ -172,12 +173,11 @@ X = X_norm.copy()
 # seed = 974 # iris:359, gaussian:527
 seed=np.random.randint(0,10**3,1)[0]
 np.random.seed(seed)
-var = (0.1*np.random.randn(13))
-current_params = var
+point = (0.1*np.random.randn(13))
 
 from qiskit.aqua.components.optimizers import AQGD
 optimizer_step = AQGD(maxiter=1, eta=2.0, disp=False)
-execute_circuit(current_params, x=X[2], print=True)
+execute_circuit(point, x=X[2], print=True)
 
 
 num_data = len(Y)
@@ -198,9 +198,8 @@ for i in range(T):
     Y_batch = Y_train[batch_index]
 
     obj_function = lambda params: cost(params, X_batch, Y_batch)
-    point, value, nfev = optimizer_step.optimize(len(current_params), obj_function,
-                                                 initial_point=current_params)
-    current_params=point
+    point, value, fev = optimizer_step.optimize(len(point), obj_function,
+                                                initial_point=point)
 
     # Compute predictions on train and validation set
     probs_train = [execute_circuit(point, x) for x in X_train]
@@ -226,3 +225,8 @@ for i in range(T):
 
 print("Final model: Cost: {:0.7f} | Acc train: {:0.3f} | Acc validation: {:0.3f} "
       "".format(cost(best_param, X_train, Y_train), acc_final_tr, acc_final_val))
+
+
+file = open("results.csv", "a")
+file.write("%s, %f, %f\n"%(dataset, acc_final_tr, acc_final_val))
+file.close()
