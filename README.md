@@ -33,7 +33,7 @@ The latter is responsible for generating the linear combinations of the input da
 
 The circuit above leads to the following quantum state: 
 
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;x=\frac{1}{\sqrt{E}}\Big(\beta_1|0\rangle|\sigma_{hid}\rangle \big[ L(x; \theta_1) \big] |\phi\rangle + \beta_2 |1\rangle |\sigma_{hid}\rangle \big[ L(x; \theta_2) \big]|\phi\rangle\Big)" />
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;\frac{1}{\sqrt{E}}\Big(\beta_1|0\rangle|\sigma_{hid} \rangle \big[ L(x; \theta_1) \big] |\phi\rangle + \beta_2 |1\rangle |\sigma_{hid}\rangle \big[ L(x; \theta_2) \big]|\phi\rangle\Big)"/>
 
 where the two linear operations, <img src="https://render.githubusercontent.com/render/math?math=L(\cdot)">,
 are put 
