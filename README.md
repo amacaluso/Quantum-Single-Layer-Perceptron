@@ -32,13 +32,14 @@ The latter is responsible for generating the linear combinations of the input da
 </p>
 
 The circuit above leads to the following quantum state: 
+
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;x=\frac{1}{\sqrt{E}}\Big(\beta_1|0\rangle|\sigma_{hid}\rangle \big[ L(x; \theta_1) \big] |\phi\rangle + \beta_2 |1\rangle |\sigma_{hid}\rangle \big[ L(x; \theta_2) \big]|\phi\rangle\Big)" />
 
 where the two linear operations, <img src="https://render.githubusercontent.com/render/math?math=L(\cdot)">,
 are put 
 through the same activation function, <img src="https://render.githubusercontent.com/render/math?math=\sigma_\text{hid}">, 
 represented by the gate <img src="https://render.githubusercontent.com/render/math?math=\Sigma">. 
-Each output is weighed by the parameters of the control qubit $(\beta)$, i.e. the coefficients attached to the hidden neurons in the linear combination that produces the output of the NN.
+Each output is weighed by the parameters of the control qubit <img src="https://render.githubusercontent.com/render/math?math=(\beta)">, i.e. the coefficients attached to the hidden neurons in the linear combination that produces the output of the NN.
 This is exactly the quantum version of the two-neurons classical SLP.
 
 Thus, the quantum circuit described above allows reproducing a classical Neural Network with one hidden layer on a quantum computer. 
