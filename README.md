@@ -13,6 +13,37 @@ perform linear combinations in superposition and discuss adaptations to classifi
 theoretical investigation, we also provide practical implementations using various simulation environments. Finally, we
  test the proposed algorithm on synthetic data exploiting both simulators and real quantum devices.
 
+# Quantum Circuit
+
+
+Intuitively, a qSLP can be implemented into a quantum computer in two steps. 
+Firstly, we generate different linear operations in superposition, each one having different parameters 
+<img src="https://render.githubusercontent.com/render/math?math=\theta_j">, 
+entangled with a control register. 
+Secondly, we propagate the activation function to all the linear combinations in superposition. 
+Notice that,  thanks this approach, instead of executing a given activation function for each hidden 
+neuron, we need only one application to obtain the output of all the neurons in the hidden layer.
+To this end, three quantum registers are necessary:  
+*control*, *data* and *temp*. 
+The latter is responsible for generating the linear combinations of the input data in superposition.
+ Also, it can be in any arbitrary state, possibly even unknown.  
+
+<p align="center">
+  <img width="500" height="200" src="qSLP.jpg">
+</p>
+
+The circuit above leads to the following quantum state: 
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;x=\frac{1}{\sqrt{E}}\Big(\beta_1|0\rangle|\sigma_{hid}\rangle \big[ L(x; \theta_1) \big] |\phi\rangle + \beta_2 |1\rangle |\sigma_{hid}\rangle \big[ L(x; \theta_2) \big]|\phi\rangle\Big)" />
+
+where the two linear operations, <img src="https://render.githubusercontent.com/render/math?math=L(\cdot)">,
+are put 
+through the same activation function, <img src="https://render.githubusercontent.com/render/math?math=\sigma_\text{hid}">, 
+represented by the gate <img src="https://render.githubusercontent.com/render/math?math=\Sigma">. 
+Each output is weighed by the parameters of the control qubit $(\beta)$, i.e. the coefficients attached to the hidden neurons in the linear combination that produces the output of the NN.
+This is exactly the quantum version of the two-neurons classical SLP.
+
+Thus, the quantum circuit described above allows reproducing a classical Neural Network with one hidden layer on a quantum computer. 
+
 # Usage
 The code implements all the experiments regarding the implementation of the quantum Single Layer Perceptron using 
 two frameworks for quantum computation:
@@ -48,7 +79,4 @@ Some of the functions for optimisation are taken from https://pennylane.ai/qml/d
 
 For any issues or questions related to the code, open a new git issue or send a mail to antonio.macaluso2@unibo.it
 
-<p align="center">
-  <img width="500" height="200" src="qSLP.jpg">
-</p>
 
