@@ -23,8 +23,7 @@ entangled with a control register.
 Secondly, we propagate the activation function to all the linear combinations in superposition. 
 Notice that,  thanks this approach, instead of executing a given activation function for each hidden 
 neuron, we need only one application to obtain the output of all the neurons in the hidden layer.
-To this end, three quantum registers are necessary:  
-*control*, *data* and *temp*. 
+To this end, three quantum registers are necessary: *control*, *data* and *temp*. 
 The latter is responsible for generating the linear combinations of the input data in superposition. Also, it can be in any arbitrary state, possibly even unknown.  
 
 <p align="center">
