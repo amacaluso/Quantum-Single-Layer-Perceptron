@@ -28,7 +28,7 @@ To this end, three quantum registers are necessary:
 The latter is responsible for generating the linear combinations of the input data in superposition. Also, it can be in any arbitrary state, possibly even unknown.  
 
 <p align="center">
-  <img width="500" height="200" src="qSLP.jpg">
+  <img width="600" height="200" src="qSLP.jpg">
 </p>
 
 The circuit above leads to the following quantum state: 
