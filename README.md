@@ -48,5 +48,7 @@ Some of the functions for optimisation are taken from https://pennylane.ai/qml/d
 
 For any issues or questions related to the code, open a new git issue or send a mail to antonio.macaluso2@unibo.it
 
-
+<p align="center">
+  <img width="800" height="200" src="qSLP.jpg">
+</p>
 
