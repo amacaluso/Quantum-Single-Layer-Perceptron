@@ -4,12 +4,8 @@ This repository contains the code to reproduce the results in the paper [A Varia
 published in the [International Conference on Computational Science 2020, Quantum Computing track](https://www.iccs-meeting.org/iccs2020/). 
 # Description
 
-In this work, we introduce a novel variational algorithm for quantum Single Layer Perceptron. Thanks to the universal 
-approximation theorem, and given that the number of hidden neurons scales exponentially with the number of qubits, our 
-framework opens to the possibility of approximating any function on quantum computers. Thus, the proposed approach 
-produces a model with substantial descriptive power, and widens the horizon of potential applications already in the 
-NISQ era, especially the ones related to Quantum Artificial Intelligence. In particular, we design a quantum circuit to 
-perform linear combinations in superposition and discuss adaptations to classification and regression tasks. After this 
+We introduce a novel variational algorithm for quantum Single Layer Perceptron. In particular, we design a quantum circuit to 
+perform linear combinations in superposition and discuss adaptations to classification tasks. After this 
 theoretical investigation, we also provide practical implementations using various simulation environments. Finally, we
  test the proposed algorithm on synthetic data exploiting both simulators and real quantum devices.
 
@@ -21,10 +17,8 @@ Firstly, we generate different linear operations in superposition, each one havi
 <img src="https://render.githubusercontent.com/render/math?math=\theta_j">, 
 entangled with a control register. 
 Secondly, we propagate the activation function to all the linear combinations in superposition. 
-Notice that,  thanks this approach, instead of executing a given activation function for each hidden 
-neuron, we need only one application to obtain the output of all the neurons in the hidden layer.
 To this end, three quantum registers are necessary: *control*, *data* and *temp*. 
-The latter is responsible for generating the linear combinations of the input data in superposition. Also, it can be in any arbitrary state, possibly even unknown.  
+The latter is responsible for generating the linear combinations of the input data in superposition. 
 
 <p align="center">
   <img width="600" height="200" src="qSLP.jpg">
@@ -33,7 +27,7 @@ The latter is responsible for generating the linear combinations of the input da
 The circuit above leads to the following quantum state: 
 
 <p align="center">
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;\frac{1}{\sqrt{E}}\Big(\beta_1|0\rangle|\sigma_{hid}\rangle\big[L(x;\theta_1)\big]|\phi\rangle+\beta_2|1\rangle|\sigma_{hid}\rangle\big[L(x;\theta_2)\big]|\phi\rangle\Big)"/>
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;\frac{1}{\sqrt{E}}\Big(\beta_1|0\rangle|\sigma_{hid}\big[L(x;\theta_1)\big]\rangle|\phi\rangle+\beta_2|1\rangle|\sigma_{hid}\big[L(x;\theta_2)\big]\rangle|\phi\rangle\Big)"/>
 </p>
 
 where the two linear operations, <img src="https://render.githubusercontent.com/render/math?math=L(\cdot)">,
