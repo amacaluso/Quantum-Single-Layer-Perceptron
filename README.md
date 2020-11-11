@@ -43,7 +43,7 @@ Thus, the quantum circuit described above allows reproducing a classical Neural 
 The code implements all the experiments regarding the implementation of the quantum Single Layer Perceptron using 
 two frameworks for quantum computation:
 the **qml_** scripts use [pennylane](https://pennylane.ai/) and reproduce the experiments reported in the paper. The 
-**qiskit_** scripts use [Qiskit](https://qiskit.org/) and allow to visualize easely the quantum circuit. The qSLP works
+**qiskit_** scripts use [Qiskit](https://qiskit.org/) and allow to visualize easily the quantum circuit. The qSLP works
 well in both cases, this strengthens the validity of the model which is independent from the implementation.
 
 ### Pennylane implementation:
